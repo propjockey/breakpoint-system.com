@@ -1135,6 +1135,24 @@
             margin-bottom: var(--bpu-8px);
           }
         }
+        .node-image-matrix {
+          min-width: 100%;
+          :nth-child(3n + 1 of td:has(img)) { --type: 1.5; } /* note */
+          :nth-child(3n + 2 of td:has(img)) { --type: 2.25; } /* card */
+          :nth-child(3n + 3 of td:has(img)) { --type: 3; } /* page */
+
+          :nth-child(3n + 1 of tr:has(img)) { --size: 1; } /* sm */
+          :nth-child(3n + 2 of tr:has(img)) { --size: 2; } /* md */
+          :nth-child(3n + 3 of tr:has(img)) { --size: 3; } /* lg */
+
+          img { width: calc((var(--type) * 3 * var(--size)) * var(--bpu-15px)); }
+          td:has(img) {
+            background: #1b1124;
+          }
+        }
+        .coin-img {
+          height: var(--bpu-64px);
+        }
       </style>
 
       <section id="node">
@@ -1159,6 +1177,10 @@
             <p>
               If you subscribe to the idea that naming things is the hardest part of computer science, then I appreciate your grace if the following reference table I built to accomplish #5 doesn't pass international or individual rigor like a standardized test question. 😶 However, I do believe the concept is practical for building intuitive awareness in how much <code>width</code> each <strong>breakpoint name</strong> represents.
             </p>
+
+            <p>The smallest breakpoint <code>coin</code> covers everything under 160. From a tiny LEGO coin to POG slammers:</p>
+            <img class="coin-img" src="./assets/bp-node/coin.png" alt="image of several coins from a tiny lego coin, through US, Thai, and Japansese currency, ending with a POG representing widths of the 'coin' breakpoint" />
+
             <div class="data-table pink-overscroll">
               <table class="node-image-matrix">
                 <thead class="sr-only-thead-collapse">
@@ -1182,14 +1204,14 @@
                     <td><strong>300</strong> - 384px (3.13" - 4.00")</td>
                   </tr>
                   <tr>
-                    <td><div>TODO:IMG</div></td>
-                    <td><div>TODO:IMG</div></td>
-                    <td><div>TODO:IMG</div></td>
-                  </tr>
-                  <tr>
                     <td>Ex: Torn "IOU" Scrap Note</td>
                     <td>Ex: Tarot Card</td>
                     <td>Ex: Passport</td>
+                  </tr>
+                  <tr>
+                    <td><img src="./assets/bp-node/sm-note.png" alt="image of a 2 inch torn scrap of paper which is roughly the width of the sm-note breakpoint" /></td>
+                    <td><img src="./assets/bp-node/sm-card.png" alt="image of a high priestess tarot card which is roughly the width of the sm-card breakpoint" /></td>
+                    <td><img src="./assets/bp-node/sm-page.png" alt="image of a passport which is roughly the width of the sm-page breakpoint" /></td>
                   </tr>
 
                   <tr>
@@ -1204,14 +1226,14 @@
                     <td><strong>600</strong> - 728px (6.25" - 7.58")</td>
                   </tr>
                   <tr>
-                    <td><div>TODO:IMG</div></td>
-                    <td><div>TODO:IMG</div></td>
-                    <td><div>TODO:IMG</div></td>
-                  </tr>
-                  <tr>
-                    <td>Ex: Large Square Post-it</td>
+                    <td>Ex: 4" Square Post-it</td>
                     <td>Ex: Standard Postcard</td>
                     <td>Ex: Comic Book</td>
+                  </tr>
+                  <tr>
+                    <td><img src="./assets/bp-node/md-note.png" alt="image of a 4 inch square postit note which is roughly the width of the md-note breakpoint" /></td>
+                    <td><img src="./assets/bp-node/md-card.png" alt="image of a standard postcard which is roughly the width of the md-card breakpoint" /></td>
+                    <td><img src="./assets/bp-node/md-page.png" alt="image of a DC Compact Comics book which is roughly the width of the md-page breakpoint" /></td>
                   </tr>
 
                   <tr>
@@ -1226,18 +1248,19 @@
                     <td><strong>970</strong>+ (10.10"+)</td>
                   </tr>
                   <tr>
-                    <td><div>TODO:IMG</div></td>
-                    <td><div>TODO:IMG</div></td>
-                    <td><div>TODO:IMG</div></td>
-                  </tr>
-                  <tr>
                     <td>Ex: A4 Lined Notepad</td>
                     <td>Ex: Dual-Fan Graphics Card</td>
                     <td>Ex: Sideways Grid Systems Book</td>
                   </tr>
+                  <tr>
+                    <td><img src="./assets/bp-node/lg-note.png" alt="image of an A4 Lined Notepad which is roughly the width of the lg-note breakpoint" /></td>
+                    <td><img src="./assets/bp-node/lg-card.png" alt="image of a low end dual-fan graphics card which is roughly the width of the lg-card breakpoint" /></td>
+                    <td><img src="./assets/bp-node/lg-page.png" alt="image of a large Grid Systems design book turned sideways which is roughly the width of the lg-page breakpoint" /></td>
+                  </tr>
                 </tbody>
               </table>
             </div>
+
             <p>For your own breakpoint values or to teach our defaults from your perspective, providing your own references in a similar breakdown could be of great benefit to those on your team and/or to the wider audience who shares your perspectives.</p>
             <p>Here's the full CSS for these default values and aliases if you'd like to make your own variant. The same rules from stage for the smallest breakpoint still (always) apply: It doesn't break at the smallest position defined and instead it only defines the <code>--bup-16px = 16px</code> point within the range of 0 to the <em>next</em> breakpoint position.</p>
             <code class="code-block">
