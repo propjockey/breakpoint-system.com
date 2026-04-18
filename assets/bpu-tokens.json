@@ -1,0 +1,72 @@
+{
+  "stage-xxs-xs": {
+    "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+    "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+    "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+    "bpu-md": { "$value": "19.20px", "$type": "dimension" },
+    "bpu-lg": { "$value": "23.04px", "$type": "dimension" },
+    "bpu-xl": { "$value": "27.65px", "$type": "dimension" },
+    "bpu-xxl": { "$value": "33.18px", "$type": "dimension" },
+    "bpu-xxxl": { "$value": "39.82px", "$type": "dimension" }
+  },
+  "stage-sm-md": {
+    "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+    "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+    "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+    "bpu-md": { "$value": "20.00px", "$type": "dimension" },
+    "bpu-lg": { "$value": "25.00px", "$type": "dimension" },
+    "bpu-xl": { "$value": "31.25px", "$type": "dimension" },
+    "bpu-xxl": { "$value": "39.06px", "$type": "dimension" },
+    "bpu-xxxl": { "$value": "48.83px", "$type": "dimension" }
+  },
+  "stage-lg": {
+    "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+    "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+    "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+    "bpu-md": { "$value": "21.33px", "$type": "dimension" },
+    "bpu-lg": { "$value": "28.43px", "$type": "dimension" },
+    "bpu-xl": { "$value": "37.90px", "$type": "dimension" },
+    "bpu-xxl": { "$value": "50.52px", "$type": "dimension" },
+    "bpu-xxxl": { "$value": "67.34px", "$type": "dimension" }
+  },
+  "stage-xl": {
+    "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+    "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+    "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+    "bpu-md": { "$value": "22.62px", "$type": "dimension" },
+    "bpu-lg": { "$value": "31.98px", "$type": "dimension" },
+    "bpu-xl": { "$value": "45.22px", "$type": "dimension" },
+    "bpu-xxl": { "$value": "63.94px", "$type": "dimension" },
+    "bpu-xxxl": { "$value": "90.41px", "$type": "dimension" }
+  },
+  "stage-xxl": {
+    "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+    "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+    "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+    "bpu-md": { "$value": "24.00px", "$type": "dimension" },
+    "bpu-lg": { "$value": "36.00px", "$type": "dimension" },
+    "bpu-xl": { "$value": "54.00px", "$type": "dimension" },
+    "bpu-xxl": { "$value": "81.00px", "$type": "dimension" },
+    "bpu-xxxl": { "$value": "121.50px", "$type": "dimension" }
+  },
+  "node-coin-to-lg-note": {
+    "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+    "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+    "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+    "bpu-md": { "$value": "19.20px", "$type": "dimension" },
+    "bpu-lg": { "$value": "23.04px", "$type": "dimension" },
+    "bpu-xl": { "$value": "27.65px", "$type": "dimension" },
+    "bpu-xxl": { "$value": "33.18px", "$type": "dimension" },
+    "bpu-xxxl": { "$value": "39.82px", "$type": "dimension" }
+  },
+  "node-lg-card-lg-page": {
+    "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+    "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+    "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+    "bpu-md": { "$value": "20.00px", "$type": "dimension" },
+    "bpu-lg": { "$value": "25.00px", "$type": "dimension" },
+    "bpu-xl": { "$value": "31.25px", "$type": "dimension" },
+    "bpu-xxl": { "$value": "39.06px", "$type": "dimension" },
+    "bpu-xxxl": { "$value": "48.83px", "$type": "dimension" }
+  }
+}

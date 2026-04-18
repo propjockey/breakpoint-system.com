@@ -1,0 +1,3558 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>breakpoint-system - Deliver your designs. | by PropJockey.io</title>
+
+  <link rel="icon" type="image/png" href="./favicon.png">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146833088-2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-146833088-2');
+  </script>
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.0.0/breakpoint-system.css">
+  <style>
+    @layer pink-overscroll {
+      :where(.pink-overscroll) {
+        --outline: var(--bpu-160px) solid #FF00C7;
+        --outline-offset: calc(-1 * var(--bpu-160px));
+        background: linear-gradient(#FF00C7, #FF00C7);
+        background-attachment: fixed;
+      }
+      :where(.pink-overscroll > *) {
+        position: relative;
+        background: white;
+      }
+    }
+    :root {
+      /* I just want the overscroll background to look nice but neither fixed gradient nor my outline hack work on root. */
+      background: linear-gradient(
+        to top,
+        transparent 100px,
+        white 100px
+      ), #ff00c7;
+      @supports (-webkit-hyphens: none) {
+        /* Sfari has an agressively stupid behavior to make the browser UI unreadable and obnoxious if there is a bg color. */
+        overscroll-behavior-y: none;
+        background: white;
+      }
+    }
+    :root {
+      container-type: inline-size;
+      width: 100%;
+      overflow-x: hidden;
+      accent-color: #8100F0;
+    }
+    * { margin: 0px; padding: 0px; box-sizing: border-box; font-family: sans-serif; }
+   :where(h5, h6) { font-size: 1em; }
+
+    .propjockey-link {
+      margin-top: -0.25rem;
+    }
+    .propjockey-link img {
+      height: 2.5rem;
+      width: auto;
+    }
+    .npm-link {
+      padding-top: 0.75rem;
+      padding-left: 0.5rem;
+    }
+    .npm-link svg {
+      height: 2.5rem;
+      width: auto;
+    }
+    .gh-link {
+      padding-right: 0.25rem;
+    }
+    .gh-link svg {
+      height: 2.5rem;
+      width: auto;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
+    }
+
+    code, samp:not(code samp), var:not(code var) {
+      background: #ffe5f8;
+      font-family: monospace;
+      padding-inline: var(--bpu-8px);
+      word-break: break-word;
+    }
+    .console {
+      @container style(--qgte-xs: 1) {
+        white-space: pre;
+      }
+      &::before {
+        content: "$ " / "";
+      }
+    }
+    .console, .html-block, .code-block {
+      display: inline-block;
+      background: #ffe5f8; /* #ffb7ee; */
+      border: var(--bpu-1px) solid #FF00C7;
+      padding: var(--bpu-4px);
+      padding-inline: var(--bpu-8px);
+      margin-block: var(--bpu-4px);
+      font-family: monospace;
+      font-weight: bold;
+      font-size: var(--bpu-xs);
+      color: #FF00C7;
+      overflow: auto;
+      text-shadow: var(--bpu-1px) 0px rgba(255, 255, 255, 0.75),
+        calc(-1 * var(--bpu-1px)) 0px rgba(255, 255, 255, 0.75),
+        0px var(--bpu-1px) rgba(255, 255, 255, 0.75),
+        0px calc(-1 * var(--bpu-1px)) rgba(255, 255, 255, 0.75);
+    }
+    .html-block, .code-block {
+      display: block;
+      margin-block: var(--bpu-12px);
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .no-wrap {
+      white-space: nowrap;
+    }
+    .tutorial-instance {
+      .pagination-nav {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        > :nth-child(2) { text-align: center; }
+        > :nth-child(3) { text-align: right; }
+      }
+      button {
+        margin: var(--bpu-2px);
+        padding: var(--bpu-4px);
+        font-size: var(--bpu-sm);
+        font-weight: bold;
+        color: white;
+        background: #FF00C7;
+        border: none;
+        border-radius: var(--bpu-5px);
+      }
+    }
+  </style>
+  <script>
+    const carouselRegistry = new Map()
+
+    /**
+     * Creates and injects a tutorial carousel after the current script tag.
+     * @param {Array} data - Array of { html: string } objects.
+     * @param {Object} callbacks - { before: func, after: func }
+     */
+    const createTutorial = (data, callbacks = {}) => {
+      const uniqueId = `tutorial-${Math.random().toString(36).slice(2, 9)}`
+      const currentScript = document.currentScript
+
+      const container = document.createElement("section")
+      container.className = "tutorial-instance"
+      container.dataset.carouselId = uniqueId
+
+      container.innerHTML = `
+        <nav class="pagination-nav">
+          <span></span>
+          <span></span>
+          <span></span>
+        </nav>
+
+        <div class="content-wrap" style="display: grid;">
+          <p
+            id="${uniqueId}-content"
+            class="tutorial-text"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+          </p>
+        </div>
+      `
+
+      if (currentScript) {
+        currentScript.insertAdjacentElement("afterend", container)
+      } else {
+        document.body.appendChild(container)
+      }
+
+      carouselRegistry.set(uniqueId, {
+        data,
+        currentIndex: 0,
+        callbacks,
+        pTag: container.querySelector(".tutorial-text"),
+        nav: container.querySelector(".pagination-nav")
+      })
+
+      renderCarousel(uniqueId)
+    }
+
+    const renderCarousel = (id) => {
+      const instance = carouselRegistry.get(id)
+      const { data, currentIndex, pTag, nav, callbacks } = instance
+      const currentItem = data[currentIndex]
+
+      if (callbacks.before) callbacks.before(currentItem)
+
+      pTag.innerHTML = currentItem.html
+
+      const prev = nav.querySelector(":scope > :nth-child(1)")
+      const page = nav.querySelector(":scope > :nth-child(2)")
+      const next = nav.querySelector(":scope > :nth-child(3)")
+
+      if (!currentIndex) { prev.innerHTML = "" }
+      else if (!prev.innerHTML) {
+        prev.innerHTML = `
+          <button
+            type="button"
+            data-goto="0"
+            aria-current="false"
+            aria-label="Go to step 1"
+          >|&lt;&lt;</button>
+          <button type="button" data-dir="prev" aria-controls="${id}-content">Previous</button>`
+      }
+
+      page.innerHTML = `Step ${currentIndex + 1} of ${data.length}`
+
+      if ((currentIndex + 1) >= data.length) { next.innerHTML = "" }
+      else if (!next.innerHTML) {
+        next.innerHTML = `<button type="button" data-dir="next" aria-controls="${id}-content">Next</button>`
+      }
+
+      if (callbacks.after) callbacks.after(currentItem)
+    }
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("button")
+      if (!btn) return
+
+      const container = btn.closest("[data-carousel-id]")
+      if (!container) return
+
+      const id = container.dataset.carouselId
+      const instance = carouselRegistry.get(id)
+      if (!instance) return
+
+      let newIndex = instance.currentIndex
+
+      if (btn.dataset.dir === "next") {
+        newIndex = Math.min(instance.currentIndex + 1, instance.data.length - 1)
+      } else if (btn.dataset.dir === "prev") {
+        newIndex = Math.max(instance.currentIndex - 1, 0)
+      } else if (btn.dataset.goto !== undefined) {
+        newIndex = parseInt(btn.dataset.goto, 10)
+      }
+
+      if (newIndex !== instance.currentIndex) {
+        instance.currentIndex = newIndex
+        renderCarousel(id)
+      }
+    })
+  </script>
+
+  <style>
+    #deliver-your-designs {
+      position: relative;
+      &::before {
+        content: "";
+        z-index: -1;
+        position: absolute;
+        width: 100cqw;
+        right: 50%;
+        top: 0px;
+        bottom: 0px;
+        transform: translateX(50%);
+        box-sizing: border-box;
+        background: #FF00C7;
+      }
+    }
+    #stages-and-nodes,
+    #bpu-breakpoint-accessibility-tutorial,
+    #bpu-constraints-tutorial {
+      position: relative;
+      &::before {
+        content: "";
+        z-index: -1;
+        position: absolute;
+        width: 100cqw;
+        right: 50%;
+        top: var(--bpu-5px);
+        bottom: var(--bpu-5px);
+        transform: translateX(50%);
+        border-top: var(--bpu-5px) solid #FF00C7;
+        border-bottom: var(--bpu-3px) solid #FF00C7;
+        box-sizing: border-box;
+        background: linear-gradient(to right, #1b1124 10%, #8100F0, #1b1124 90%);
+      }
+    }
+    .hero-stage {
+      --bpu-main-max: 816;
+      --bp-fluidity: var(--fluid-xxs);
+      position: relative;
+      --bpu-aspect-ratio: 16 / 9;
+      --bpu-cross-basis: 100vh;
+      width: var(--bpu-main-result);
+      height: var(--bpu-cross-result);
+      border-radius: var(--bpu-16px);
+      margin-left: auto;
+      margin-right: auto;
+      --overflow: hidden;
+      background: url(./assets/artjane-flowers-tr.png) right top / var(--bpu-96px) auto no-repeat,
+        url(./assets/artjane-flowers-bl.png) var(--bpu-5px) calc(100% - var(--bpu-5px)) / var(--bpu-72px) auto no-repeat,
+        url(./assets/artjane-flowers-br.png) calc(100% - var(--bpu-5px)) calc(100% - var(--bpu-5px)) / var(--bpu-72px) auto no-repeat,
+        #ffe5f8;
+      --isolation: isolate;
+      border-bottom: var(--bpu-2px) solid #FF00C7;
+
+      &::before {
+        content: "";
+        z-index: -1;
+        position: absolute;
+        width: 100cqw;
+        right: 50%;
+        top: 0px;
+        transform: translateX(50%);
+        height: calc(100% + var(--bpu-2px));
+        border-bottom: var(--bpu-2px) solid #FF00C7;
+        box-sizing: border-box;
+        background: linear-gradient(to right, #FF00C7 5%, #ffe5f8 25% 75%, #FF00C7 95%);
+      }
+
+      &::after {
+        opacity: 0.75;
+        --content: "";
+        z-index: -1;
+        --mask: url("./assets/kintsugi.svg")
+          calc(var(--bpu-1px) * -267) calc(var(--bpu-1px) * -378) /
+          calc(var(--bpu-1px) * 1000) calc(var(--bpu-1px) * 1000) no-repeat;
+        -webkit-mask: var(--mask);
+        mask: var(--mask);
+        position: absolute;
+        inset: 0px;
+        --background:
+          radial-gradient(
+            circle at 25% 29%,
+            transparent var(--shatter, 0%),
+            #ffe5f8 var(--shatter, 0%)
+          ) left top / var(--bpu-main-result) var(--bpu-cross-result),
+          radial-gradient(
+            circle at 25% 29%,
+            #888888 calc(150vw - var(--heal)),
+            transparent calc(150vw - var(--heal)) 250vw
+          ) left top / var(--bpu-main-result) var(--bpu-cross-result),
+          linear-gradient(
+            45deg,
+          #a67c0044 0%,
+          #bf953f8f 25%,
+          #fcf6ba 50%,
+          #b387288f 75%,
+          #fdc8308f 100%
+          ) var(--gold-x-pos) 50%;
+        background: linear-gradient(
+            45deg,
+          #fcf6ba 0%,
+          #bf953f8f 25%,
+          #a67c0044 50%,
+          #fdc8308f 75%,
+          #b387288f 100%
+          ) 130% 50%;
+        background-size: 200% 200%;
+        --animation: goldShimmer 8s ease-in-out infinite alternate,
+          shatter 0.75s linear 1 forwards,
+          heal 7s ease-out 1 forwards
+        ;
+        --animation-delay: 3.5s, 5.0s, 5.75s;
+      }
+    }
+
+    @property --shatter {
+      syntax: "<percentage>";
+      initial-value: 0%;
+      inherits: false;
+    }
+    @keyframes shatter {
+      to { --shatter: 200%; }
+    }
+    @property --heal {
+      syntax: "<length>";
+      initial-value: 0px;
+      inherits: false;
+    }
+    @keyframes heal {
+      to { --heal: 200vw; }
+    }
+    @property --gold-x-pos {
+      syntax: "<percentage>";
+      initial-value: 0%;
+      inherits: false;
+    }
+    @keyframes goldShimmer {
+      to { --gold-x-pos: 100%; }
+    }
+
+    .hero-content {
+      position: relative;
+      text-align: center;
+      color: #000000;
+      font-size: var(--bpu-24px);
+      padding: var(--bpu-8px);
+      text-shadow: 0px 0px var(--bpu-16px) #ffb7ee;
+    }
+
+    .hero-content h1 {
+      font-size: var(--bpu-14px);
+      margin-bottom: var(--bpu-2px);
+      color: #444444;
+    }
+
+    .hero-content .sub-header {
+      font-size: var(--bpu-30px);
+      font-weight: 900;
+      margin-bottom: var(--bpu-4px);
+      display: block;
+      color: #FF00C7;
+      font-style: normal;
+    }
+
+    .hero-content p {
+      font-size: var(--bpu-18px);
+      line-height: 1.3;
+      font-weight: 400;
+      width: 100%;
+    }
+
+    .span-together {
+      display: inline-block;
+      width: var(--bpu-80px);
+    }
+  </style>
+</head>
+<body class="bp-stage">
+  <main>
+    <section class="hero-stage bp-stage">
+      <div class="hero-content">
+        <h1>@propjockey/breakpoint-system</h1>
+        <em class="sub-header">Deliver your designs.</em>
+        <p style="text-align-last: justify; white-space: pre-line;">I've spent my entire tech journey living,
+          building, and loving in the gap between
+          designers &amp; engineers.
+          With breakpoint-system, I hope to turn
+          that love into a bridge where both worlds
+          <span class="span-together"></span>create without friction.<span class="span-together"></span>
+        </p>
+      </div>
+    </section>
+
+    <style>
+      body {
+        /* bp-stage */
+        --bpu-main-max: calc(var(--qin-sm) * 816);
+        --bp-fluidity: var(--fluid-xxs) var(--fluid-xs) var(--fluid-sm);
+        /* --bpu-main-result will compute to 100% as a <length> below md because the value we pass in is 0 */
+      }
+      ul { list-style-type: none; }
+      main {
+        display: grid;
+        justify-items: center;
+      }
+      article:not(#install) {
+        margin-bottom: var(--bpu-48px);
+      }
+      #stages-and-nodes > section {
+        margin-top: var(--bpu-48px);
+      }
+      main > article,
+      main > section:not(.hero-stage) {
+        margin-top: var(--bpu-24px);
+        font-size: var(--bpu-sm);
+        padding-inline: var(--bpu-6px);
+        width: var(--bpu-main-result);
+      }
+
+      h2 {
+        font-size: var(--bpu-lg);
+        margin-bottom: var(--bpu-16px);
+      }
+
+      dl {
+        margin-left: var(--bpu-6px);
+        margin-bottom: var(--bpu-12px);
+      }
+
+      dt {
+        font-size: var(--bpu-md);
+        font-weight: bold;
+        margin-bottom: var(--bpu-8px);
+        color: #333;
+      }
+
+      dd {
+        font-size: var(--bpu-sm);
+        padding-left: var(--bpu-6px);
+        border-left: var(--bpu-2px) solid #ddd;
+        color: #555;
+        &::before {
+          content: "- " / "";
+        }
+      }
+
+      h3 {
+        font-size: var(--bpu-md);
+        margin-top: var(--bpu-16px);
+        margin-bottom: var(--bpu-10px);
+      }
+
+      .docs-blade, .test-blade {
+        margin-block: var(--bpu-16px);
+      }
+
+      .spoiler-tag {
+        font-size: 0.8em;
+        font-weight: normal;
+        color: #888888;
+      }
+    </style>
+
+    <style>
+      .tooltip-container {
+        position: relative;
+        display: inline-block;
+        cursor: help;
+        color: #FF00C7;
+        font-weight: bold;
+        &::before {
+          content: "*" / "";
+        }
+      }
+
+      .tooltip-popup {
+        position: absolute;
+        bottom: 150%;
+        transform: translateX(calc(
+          var(--qgte-xs) * -70% - 20%
+        ));
+        width: max-content;
+        max-width: calc(2 * var(--bpu-160px));
+        background-color: #1b1124;
+        color: #ffffff;
+        padding: var(--bpu-8px) var(--bpu-12px);
+        border-radius: var(--bpu-2px);
+        font-weight: normal;
+
+        /* hidden but accessible to screen readers */
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+        z-index: 10;
+      }
+      .tooltip-container:where(:hover, :focus-visible) .tooltip-popup {
+        opacity: 1;
+        visibility: visible;
+      }
+      .tooltip-container:focus {
+        outline: none;
+      }
+      .tooltip-container:focus-visible {
+        outline: var(--bpu-2px) solid #FF00C7;
+        outline-offset: var(--bpu-2px);
+        border-radius: var(--bpu-2px);
+      }
+      .test-blade { display: none; }
+    </style>
+    <article id="install">
+      <h2>Wide open CSS-only API</h2>
+      <dl>
+        <dt>@propjockey/<wbr />breakpoint-system</dt>
+        <dd>Customizable breakpoints.</dd>
+        <dd>Custom-aliased queries.</dd>
+        <dd>Effortless, optional, fluid design engine built in.</dd>
+        <dd>No builds, no JS, no sweat.</dd>
+      </dl>
+      <h3>Install & Import:</h3>
+      <code class="console" style="font-size: calc(var(--qin-xxs) * var(--bpu-xxs) + var(--qgte-xs) * var(--bpu-sm));">npm install @propjockey/breakpoint-system</code>
+      <p>Then import <code>node_modules/@propjockey/breakpoint-system/breakpoint-system.css</code> into your project.</p>
+      <b style="margin-block: var(--bpu-16px); display: block;">OR</b>
+      <p>
+        Use your favorite NPM CDN and include it on your page for small projects:<br>
+        <code class="html-block">&lt;link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.0.0/breakpoint-system.css"&gt;</code>
+      </p>
+      <h3>The biggest accessibility problem with media queries is solved in the background.</h3>
+      <p style="margin-bottom: var(--bpu-20px);">
+        Breakpoints defined as pixel values for <strong>ease of DX</strong> are automatically executed as <em>root <code>em</code> values</em> for the <strong>relief of UX</strong>. This silently, cleanly, solves the far too often overlooked accessibility problems with user system font-size adjustments. The end experience is: users with a larger system font-size trip your mobile-first breakpoints proportionately later.
+      </p>
+      <p>
+        When using our fluid breakpoint unit, this guarantees magnification <strong>at least</strong> as much as their font-size change. Automatically - and without introducing any layout jank or overflow. 🧙‍♀️
+      </p>
+      <details class="docs-blade" id="docs-rem-config">
+        <summary><h4>REM Config</h4></summary>
+        <div>
+          <p>There are only two settings on <code>:root</code>, both are optional. To support the automatic translation of your pixel breakpoints into the accessibility-shifted root em values, we safely assume <code>1rem = 16px</code> as a default. If you don't change your root font size, there's nothing you need to do here. If you do modify your font size on <code>:root</code>, you must forward that modification into the <code>breakpoint-system</code> engine.</p>
+          <code class="code-block">
+            :root {
+              <var>font-size: 62.5%;</var>
+              --bp-rem-adjusted: <var>62.5</var>;
+            }
+          </code>
+          <p>The value of <code>--bp-rem-adjusted</code> is the percentage you're applying to your root font-size as a raw number, without the <code>%</code>. The default value is <code>100</code>. Knowing your intended basis allows the engine to delta for the user's system font-size magnification scale, and shift the breakpoints to accommodate.</p>
+          <aside class="aside-callout">
+            <p>
+              If you are integrating into an existing project that overrides the root font size with a hardcoded, non-rem, non-percentage length, you are blocking the system font-size adjustment already and should opt out of this feature.
+            </p>
+            <p>
+              Similarly, if you are managing fluid scaling with custom <code>vw</code> calculations on root <em>that include rem or em</em>, we can't trivially delta for the user's system setting. This approach is often problematic for users with larger system font sizes, causing *some* overflowing, overlapping, and/or clipped content that can't be pinch-pan-zoom'd to resolve. You should also opt out of this feature.
+            </p>
+          </aside>
+          <p id="docs-bp-user-em">By default, we only shift the breakpoints <em>if the user's font size is bigger than your basis</em>. This helps prevent 3rd party fixed-width content (most ads) from winding up in containers smaller than expected. The options for this setting are resolved scalar variables provided by <code>breakpoint-system</code>.</p>
+          <code class="code-block">
+            :root {
+              /* default, bigger scaling */
+              --bp-user-em: <var>var(--bp-bigger-scaling-opt-in)</var>;
+
+              /* option, allow all scaling */
+              --bp-user-em: <var>var(--bp-full-scaling-opt-in)</var>;
+
+              /* opt-out of all user system font size scaling */
+              --bp-user-em: <var>var(--bp-scaling-opt-out)</var>;
+            }
+          </code>
+          <p><code>--bp-user-em</code> can also be configured individually on each breakpoint-system element if needed. This is very useful if you have a contract to deliver fixed-sized content such as (non-flexible) ad units. In that case, bigger scaling opt in as the global default is great, and on the individual ad unit component, set it to opt out. The <a href="#bpu-breakpoint-accessibility-tutorial">walkthrough</a> later in the documentation quietly demonstrates this.</p>
+        </div>
+      </details>
+      <details class="test-blade" id="tests-rem-config">
+        <summary><h4>Tests</h4></summary>
+        <div><p>TODO</p></div>
+      </details>
+    </article>
+
+    <article id="global-user-reach">
+      <h2>91% Global User Reach</h2>
+      <p>
+        Hit the metal at <strong>91%</strong> reach with <code>calc()</code> only switches and animation indexing.<br />
+        <br />
+        Take it modern and use nested <code>@container style()</code> queries for <strong>74%</strong>.*<br />
+        <br />
+        Or rise to the bleeding edge with <code>if(style())</code> queries for <strong>66%</strong> global user reach.
+      </p>
+      <p style="margin-top: var(--bpu-16px);">* <small><a href="https://caniuse.com/css-container-queries-style">88% according to caniuse</a>, but Safari's implementation isn't ready for production so we've subtracted their 14% and use fallbacks.</small></p>
+      <details class="docs-blade" id="docs-gur" style="display: none;">
+        <summary>
+          <h3>
+            Full Browser Breakdown
+            <small class="spoiler-tag" style="white-space: nowrap; margin-right: var(--bpu-16px);">
+              (⚠️ spoilers inside!)
+            </small>
+          </h3>
+        </summary>
+        <div class="sterile-matrix"><p>TODO</p></div>
+      </details>
+    </article>
+
+    <style>
+      summary {
+        cursor: pointer;
+        list-style: none; /* Removes arrow in Firefox/Standard */
+        &::-webkit-details-marker {
+          display: none; /* Removes arrow in Safari/Chrome */
+        }
+
+        background-color: #fdf2f8;
+        border: var(--bpu-2px) solid #fbcfe8;
+        border-radius: var(--bpu-5px);
+        padding: var(--bpu-6px);
+        transition: all 0.2s ease-in-out;
+
+        &:focus, &:hover {
+          background-color: #fbcfe8;
+          outline: none;
+          border-color: #FF00C78f;
+        }
+        &:focus-visible {
+          outline: var(--bpu-2px) solid #FF00C78f;
+          outline-offset: var(--bpu-4px);
+        }
+
+        > * {
+          position: relative;
+          margin: 0;
+          display: block;
+          font-size: var(--bpu-sm);
+
+          &::after {
+            content: "▼";
+            position: absolute;
+            font-size: var(--bpu-xxs);
+            color: #FF00C7;
+            margin-left: var(--bpu-16px);
+            transition: transform 0.3s ease;
+            right: var(--bpu-4px);
+            top: 50%;
+            transform: translateY(-50%);
+          }
+        }
+      }
+      details[open] > summary > *::after {
+        transform: translateY(-50%) rotate(-180deg);
+      }
+
+      #stages-and-nodes {
+        background: #1b1124;
+        color: #ffffff;
+        border-top: var(--bpu-4px) solid #FF00C7;
+        border-bottom: var(--bpu-4px) solid #FF00C7;
+        border-radius: var(--bpu-12px);
+        padding-block: var(--bpu-16px);
+      }
+
+      #stages-and-nodes, #bpu {
+        h3:not(summary h3) {
+          color: #FF00C7;
+        }
+      }
+
+      summary {
+        color: #1b1124;
+      }
+      summary + * {
+        background: white;
+        color: black;
+        border-top: var(--bpu-8px) solid #ff00c7;
+        border-radius: var(--bpu-6px);
+        margin-inline: calc(-1 * var(--bpu-4px));
+        padding: var(--bpu-6px);
+        dt {
+          padding-top: var(--bpu-16px);
+        }
+        dd {
+          padding-top: var(--bpu-8px);
+        }
+        p {
+          margin-top: var(--bpu-16px);
+          margin-bottom: var(--bpu-16px);
+        }
+      }
+      .aside-callout {
+        margin-top: var(--bpu-8px);
+        margin-bottom: var(--bpu-16px);
+        padding-top: var(--bpu-8px);
+        border-top: var(--bpu-2px) dashed #ff00c7;
+        border-bottom: var(--bpu-2px) dashed #ff00c7;
+        border-radius: var(--bpu-10px);
+      }
+    </style>
+
+    <article id="stages-and-nodes">
+      <h2>Stages and Nodes</h2>
+      <p>Your main page or full-axis section layouts are the stages, your components are the nodes.</p>
+
+      <details class="docs-blade" id="docs-stages-and-nodes">
+        <summary><h3 id="classes">Classes, customization, and queries</h3></summary>
+        <div>
+          <p>All of <code>@propjockey/<wbr />breakpoint-system</code> is in 3 classes.</p>
+          <dl>
+            <dt>.breakpoint-system</dt>
+            <dd>The full library functionality, without any default breakpoints or aliases defined.</dd>
+            <dd>You can use <code>display: contents;</code> on any of the 3 breakpoint-system elements, if you wish.</dd>
+            <dt>.bp-stage</dt>
+            <dd>The full library functionality, with default breakpoints and aliases defined.</dd>
+            <dd>This initializes your traditional idea of what responsive media queries do.</dd>
+            <dd>Intended to respond to the full width of the page for your main app layouts.</dd>
+            <dd>In the most basic use case, you place this class on your <code>&lt;body&gt;</code> tag and you're ready to query.</dd>
+            <dt>.bp-node</dt>
+            <dd>The full library functionality, with different default breakpoints and aliases defined.</dd>
+            <dd>This initializes a set of element-width based breakpoints that individual components would respond to.</dd>
+            <dd>By default the queries measure these breakpoints against <code>100cqw</code>.</dd>
+            <dd>You would place the ".bp-node" on every component's root element.</dd>
+          </dl>
+
+          <section>
+            <h4 id="query-on">--bp-query-on: &ltlength&gt;</h4>
+            <p>Set <code>--bp-query-on</code> to a <code>&ltlength&gt</code> such as 500px, 100cqw, or 50vw to specify what the breakpoints are breaking against. This defaults to 100cqw, which is the same as 100vw when outside of a container. You typically won't set this for stages - nor for nodes placed at full width inside of a (inline-)size container.</p>
+
+            <p>The core architecture of <code>@propjockey/breakpoint-system</code> provides an <strong>enormous advantage</strong>: <code>100cqw</code> does not include the scrollbar size. You are querying against the actual space your designs have to work in.</p>
+            <aside class="aside-callout">
+              <p>Traditionally scrollbar gutters have been a nightmare for bridging the gap between a designer's intention and the engineer's results because media queries don't exclude them. You never knew if or when scrollbar gutters would appear - let alone how wide they'd be - since it all depends on the numerous browsers, devices, and user accessibility settings.</p>
+            </aside>
+            <p>To embrace this win, we enthusiastically suggest adding the following CSS enhancement to your page, especially if you're using <code>.bp-stage</code> on <code>body</code>:</p>
+            <code class="code-block">
+              :root {
+                container-type: inline-size;
+                width: 100%;
+
+                /* plus these if they're not
+                // already in your reset. */
+                box-sizing: border-box;
+                margin: 0;
+              }
+            </code>
+            <aside class="aside-callout">
+              <p><code>.breakpoint-system</code> (and our other classes) work on <code>:root</code> as well, but because <code>100cqw</code> would evaluate to the raw viewport size, you'll reintoduce the same design and accessibility problems traditional media queries have by including scrollbar gutters.</p>
+            </aside>
+          </section>
+
+          <section>
+            <h4 id="custom-breakpoints">Defining your own breakpoints</h4>
+            <p>You can define as many breakpoint sets as you want. However, for consistency, we recommend using only one site-wide set for the widths of your stages, and one separate set for the widths of your nodes. Then add the <code>breakpoint-system</code> class to your element along with the class defining your chosen breakpoints, <var>my-webapp-breakpoints</var>. (our default sets already mix-in the <code>breakpoint-system</code> class instead of it being separate.)</p>
+            <p>You can specify up to 10 breakpoints per set. These variables take <code>&lt;number&gt;</code> values representing the pixel size of the breakpoint.</p>
+            <code class="code-block">
+              <var>.my-webapp-breakpoints</var> {
+                --bp-0-at: <var>375</var>;
+                --bp-1-at: <var>480</var>;
+                ...
+                --bp-8-at: <var>0</var>;
+                --bp-9-at: <var>0</var>;
+              }
+            </code>
+            <p>Set the value to 0 to omit it from the set, otherwise define the values in order from smallest to largest.</p>
+            <aside class="aside-callout">
+              <p>When using our breakpoint unit, each breakpoint also defines where the <code>--bpu-1px</code> value resets from its fluid scaling back to 1 pixel (scaled by the user's system font size).</p>
+              <p>The smallest breakpoint defined doesn't technically "break" but instead <code>--bp-0-at</code> defines where your <code>--bpu-16px</code> value would actually equal <code>16px</code>, for example. In viewports bigger than <code>--bp-0-at</code> but less than the next breakpoint, "16px" would be bigger. In viewports smaller than <code>--bp-0-at</code>, it would be smaller.</p>
+              <p>The smallest breakpoint value, in that case, is also documentation of the smallest mockup size the team agrees on.</p>
+              <p>When using <code>--bpu-*</code> fluidity, designers targeting any breakpoint should always set their artboard/frame/canvas width to the exact breakpoint sizes as defined in the set <em>and use pixels to size and layout everything</em>. This makes handoff to the developers trivial since <code>--bpu-*</code> values begin 1:1 with pixels; so your designs should wind up <em>exactly</em> replicated in code.</p>
+              <p>The developer's replicas in code are automatically scaled up as-needed in larger viewports with no additional effort. Just like an image does.</p>
+              <p>Plus, <code>--bpu-*</code> values tie into supporting user font-size adjustment automatica11y.</p>
+            </aside>
+          </section>
+
+          <section>
+            <h4 id="query-aliases">Querying and query aliases</h4>
+            <p>Each of the 9 breakpoints has 3 built-in queries.</p>
+            <ul>
+              <li>query greater-than-or-equal-to (qgte)</li>
+              <li>query less-than (qlt)</li>
+              <li>query in (qin)</li>
+            </ul>
+
+            <p>To be "in" a specific breakpoint, the container must be between that breakpoint's value and the next one up. For example, to be "in" breakpoint 3, you must be <code>gte</code> index 3 and <code>lt</code> index 4. You are "in" the smallest breakpoint if you are simply <code>lt</code> the second smallest one.</p>
+
+            <code>--bp-qgte-0, --bp-qlt-0, --bp-qin-0, --bp-qgte-1, ... --bp-qin-9</code>
+
+            <p>The built-in query vars are used as "<code>&lt;integer&gt;</code>" bit-flags for true or false. They do not inherit so you should almost always alias them or use the default sets which come pre-aliased (aliased queries DO inherit). Not only are aliases good for ease of readability, but <code>calc()</code> and <code>if(style())</code> queries running on child elements need to inherit the flags.</p>
+
+            <p>The query flags are all 0 if the corresponding breakpoint value is 0 (or if the breakpoint is manually excluded from <code>--bp-fluidity</code>). The query "in" results are aware of skipped breakpoints and behave as you would hope. (if you are in the md range but md is currently excluded, <code>--qin-sm</code> is still 1.)</p>
+
+            <code class="code-block">
+              <var>.my-webapp-breakpoints</var> {
+                --bp-0-at: <var>375</var>;
+                <var>--gte-small</var>: var(--bp-qgte-0);
+                <var>--lt-small</var>: var(--bp-qlt-0);
+                <var>--in-small</var>: var(--bp-qin-0);
+
+                --bp-1-at: <var>480</var>;
+                <var>--gte-swole</var>: var(--bp-qgte-1);
+                ...
+                --bp-8-at: <var>0</var>;
+                --bp-9-at: <var>0</var>;
+              }
+            </code>
+
+            <section>
+              <h5 id="container-style-queries">@container style() queries</h5>
+              <p>
+                ⚠️ <a href="https://caniuse.com/css-container-queries-style"><code>container style()</code></a> queries cannot read variables set on the element itself. If your element has
+                <code class="code-block">
+                  class="
+                    breakpoint-system
+                    my-webapp-breakpoints
+                    home-page-layout-instance
+                  "
+                </code>
+                you will <strong>only</strong> be able to conditionally style things <strong>inside</strong> of it. This CSS limitation does not apply to <code>calc() switches</code> and <code>if(style())</code> queries.
+              </p>
+              <p>📝 Don't forget to specify the <code>: 1</code> inisde the query. ctrl+f: troubleshooting</p>
+              <code class="code-block">
+                body.home-page-layout-instance {
+                  color: blue; /* can't change with queries */
+
+                  main {
+                    @container style(--lt-small: 1) {
+                      /* unreachable if it's always aliasing the smallest breakpoint */
+                    }
+                    @container style(--gte-small: 1) {
+                      color: black;
+                      --var: same as not being in a query because everything is gte your smallest bp;
+                    }
+                    @container style(--gte-swole: 1) {
+                      --var: won't apply to small;
+                    }
+                  }
+                }
+              </code>
+              <p>
+                ⚠️ Safari's implementation often does not work under slight load. Queued @container style query updates don't prevent the current frame from "finishing" the render before they've been flushed. Often the previous frame will render instead, which leads to crashes if the previous frame's deallocated memory is volatile (like during animations).
+                <code class="code-block">
+                  @supports (background: paint(for-chromium))
+                    and (animation-composition: add) {
+                    /* Chrome 112+ only.
+                    // (111 +1 because Opera 97 used 111 but was still behind a flag)
+                    */
+                  }
+                </code>
+                You can use this supports query to write @container style() queries safely. And <code>not (...)</code> it for your fallbacks.
+              </p>
+              <aside class="aside-callout">
+                <p>You might often find yourself setting <code>display: contents;</code> on these CSS component roots since they are essentially just translating the container your component is nested in into a queryable viewport. So this self-querying CSS limitation may be a non-issue there as well.</p>
+                <p>Size, position, margin, and other outer-spacing are properties defined by the context <em>even though they're set on a child of that context</em>. This implies an ideal boundary where components are nested inside well-defined <code>containers</code> that are themselves children of - but belong to - the parent grid/layout system. Essentially slots for CSS Components to take the full space available within.</p>
+              </aside>
+            </section>
+
+            <section>
+              <h5 id="if-style-queries">if(style()) queries</h5>
+              <p>
+                <a href="https://caniuse.com/mdn-css_types_if_style"><code>if(style())</code></a> loses the ability to style multiple properties at once but gains the ability to query on the component itself. The one gotcha is short-circuiting means you have to do mobile last if you're using <code>qgte</code> because the first one true blocks the rest. You could use <code>qin</code> and <code>qlt</code> to keep them listed mobile first though.
+              </p>
+              <code class="code-block">
+                :root.home-page-layout-instance {
+                  color: if(
+                    style(--gte-swole: 1): #FF00C7;
+                    else: blue;
+                  );
+
+                  body {
+                    color: if(
+                      style(--gte-small: 1): black;
+                      else: red; /* unreachable */
+                    );
+                    --var: if(
+                      style(--gte-swole: 1): won't apply to small;
+                      style(--gte-small: 1): has to come second, first one truthy short-circuits;
+                      style(--gte-anything: 1): unreachable because gte the smallest is always true;
+                    );
+                  }
+                }
+              </code>
+            </section>
+
+            <section>
+              <h5 id="calc-switches">calc() switches</h5>
+              <p>
+                <code>calc()</code> also loses the ability to style multiple properties at once (unless you're <a href="https://codepen.io/propjockey/pen/azmVpvd?editors=1100">setting a negative delay index to a paused animation</a> that sets multiple properties in each keyframe) but like <code>if(style())</code>, it also gains the ability to query on the component itself.
+              </p>
+              <code class="code-block">
+                --harmonic-scalar: calc(
+                  var(--qin-xxs) * 1.2 +
+                  var(--qin-xs) * 1.2 +
+                  var(--qin-sm) * 1.25 +
+                  var(--qin-md) * 1.25 +
+                  var(--qin-lg) * 1.333 +
+                  var(--qin-xl) * 1.414 +
+                  var(--qin-xxl) * 1.5
+                );
+              </code>
+              <code class="code-block">
+                body.home-page-layout-instance {
+                  color: rgb(
+                    calc(var(--gte-swole) * 255),
+                    0,
+                    calc(
+                      var(--in-small) * 255 +
+                      var(--gte-swole) * 199
+                    )
+                  );
+
+                  main {
+                    color: rgb(
+                      calc(
+                        (1 - var(--gte-small)) * 255
+                      ), 0, 0
+                    );
+                  }
+                }
+              </code>
+              <p>The best resource for learning calc switches is <a href="https://css-tricks.com/dry-switching-with-css-variables-the-difference-of-one-declaration/">this article by Ana Tudor</a>.</p>
+            </section>
+
+          </section>
+        </div>
+      </details>
+      <section id="stage">
+        <h3>Excellent default breakpoints for stages</h3>
+        <ul>
+          <li>Seven modern breakpoints backed by usage statistics and standard design tool presets.</li>
+          <li>Industry standard t-shirt size aliases for familiarity of DX and ease of typing.</li>
+        </ul>
+        <details class="docs-blade" id="docs-stage">
+          <summary><h4>Stage Default Breakpoints and Aliases</h4></summary>
+          <div>
+            <code class="code-block">
+              :where(.bp-stage) {
+                --bp-0-at: 375;
+                /* just over 10% of mobile phones are 360 width, < 2% are smaller than that */
+                --qgte-xxs: var(--bp-qgte-0);
+                --qlt-xxs: var(--bp-qlt-0);
+                --qin-xxs: var(--bp-qin-0);
+                --fluid-xxs: var(--bp-fluid-0);
+                /* the --fluid-* vars are aliased for use in --bp-fluidity */
+
+                --bp-1-at: 480;
+                --qgte-xs: var(--bp-qgte-1);
+                --qlt-xs: var(--bp-qlt-1);
+                --qin-xs: var(--bp-qin-1);
+                --fluid-xs: var(--bp-fluid-1);
+
+                --bp-2-at: 768;
+                --qgte-sm: var(--bp-qgte-2);
+                --qlt-sm: var(--bp-qlt-2);
+                --qin-sm: var(--bp-qin-2);
+                --fluid-sm: var(--bp-fluid-2);
+
+                --bp-3-at: 1024;
+                --qgte-md: var(--bp-qgte-3);
+                --qlt-md: var(--bp-qlt-3);
+                --qin-md: var(--bp-qin-3);
+                --fluid-md: var(--bp-fluid-3);
+
+                --bp-4-at: 1280;
+                --qgte-lg: var(--bp-qgte-4);
+                --qlt-lg: var(--bp-qlt-4);
+                --qin-lg: var(--bp-qin-4);
+                --fluid-lg: var(--bp-fluid-4);
+
+                --bp-5-at: 1440;
+                --qgte-xl: var(--bp-qgte-5);
+                --qlt-xl: var(--bp-qlt-5);
+                --qin-xl: var(--bp-qin-5);
+                --fluid-xl: var(--bp-fluid-5);
+
+                --bp-6-at: 1920;
+                --qgte-xxl: var(--bp-qgte-6);
+                --qlt-xxl: var(--bp-qlt-6);
+                --qin-xxl: var(--bp-qin-6);
+                --fluid-xxl: var(--bp-fluid-6);
+
+                --bp-7-at: 0;
+                --bp-8-at: 0;
+                --bp-9-at: 0;
+              }
+            </code>
+            <h5 id="stage-breakpoint-values">Why these specific values?</h5>
+            <p>
+              Choosing breakpoint values is always a balancing act between global hardware statistics, popular CSS frameworks, and the default frame sizes in design tools. We ultimately chose these 7 because, while backed by those statistics, they mark widths where designs have the room to change in very specific and common ways.
+            </p>
+            <dl>
+              <dt><code>375px</code> (xxs)</dt>
+              <dd><strong>The baseline.</strong> While about 10% of global mobile traffic sits at <code>360px</code> (many Android devices), <code>375px</code> is the default "iPhone" frame in Figma and Sketch. By starting the fluid scaling here, designs map 1:1 perfectly with the most common design tool defaults. Those 360px devices will scale down fluidly - without breaking the layout.</dd>
+              <dd>~12% of the global userbase is slightly less than this, about 30% is more than this without crossing into the next breakpoint.</dd>
+
+              <dt><code>480px</code> (xs)</dt>
+              <dd><strong>Breathing room.</strong> This is the historic upper boundary for mobile phones. Crossing this line usually means minor spatial changes, and for <code>--bpu-*</code> a chance to reset to the baseline sizing, which happens automatically. Designers do not typically squish two columns here yet but instead introduce larger margins, gutters, and optimize typography.</dd>
+              <dd>~3% of global users.</dd>
+
+              <dt><code>768px</code> (sm)</dt>
+              <dd><strong>Columns.</strong> <code>768px</code> is where the screen becomes large enough to support tight multi-column designs. This is the classic iPad in portrait mode. Almost every major UI framework (like Tailwind and Bootstrap) still uses this as the point for introducing collapsible sidebars, complex grid layouts, and some expanded navigation.</dd>
+              <dd>~5% of global users.</dd>
+
+              <dt><code>1024px</code> (md)</dt>
+              <dd><strong>Desktop transition.</strong> Crossing <code>1024px</code> provides enough horizontal real estate to default to un-collapse sidebars, reveal full top-level navigation, and support dense three-column (or comfortable two-column) layouts. It matches the classic iPad in landscape and remains a common "small desktop" preset in every major design tool.</dd>
+              <dd>~4% of global users.</dd>
+
+              <dt><code>1280px</code> (lg)</dt>
+              <dd><strong>Deep breaths.</strong> Enough room for compact, complex application canvases. 720p displays and many smaller laptop viewports live here. Large data tables, heavy dashboards, and persistent panels can be safely unpacked. Matches Tailwind's <code>xl</code> breakpoint.</dd>
+              <dd>~13% of global users.</dd>
+
+              <dt><code>1440px</code> (xl)</dt>
+              <dd><strong>The modern desktop.</strong> If you open Figma and click the standard "Desktop" frame, it drops a <code>1440px</code> artboard. Modern web design mapping perfectly to many modern laptop viewports (including standard MacBook scaling) and mid-sized monitors. Design with pixels and it's ready for handoff.</dd>
+              <dd>~10% of global users.</dd>
+
+              <dt><code>1920px</code> (xxl)</dt>
+              <dd><strong>Full HD.</strong> Standard 1080p monitors. This is the upper boundary where you usually have already stopped scaling up UI elements and instead started designing with max-widths and margin gutters to keep text line-lengths readable and minimize mouse-travel-distance. Specialized tooling, gaming, and huge collections of data widgets and tickers are among the rare to use it all.</dd>
+              <dd>~23% of global users.</dd>
+            </dl>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-stage">
+          <summary><h4>Tests</h4></summary>
+          <div><p>TODO</p></div>
+        </details>
+      </section>
+
+      <style>
+        .data-table {
+          display: block;
+          overflow: auto;
+          container-type: inline-size;
+          width: 100%;
+          border: var(--bpu-2px) solid #FF00C7;
+          --background: #FF00C7;
+          margin-block: var(--bpu-4px);
+          position: relative;
+          /* the position absolute things inside of this table causes the page
+          // to scroll as if they weren't contained here...
+          // so position realative fixes it... probably a bug.
+          */
+
+          > .code-block {
+            white-space: pre;
+            margin-block: 0px;
+          }
+
+          table {
+            border-collapse: collapse;
+            background: #ffe5f8; /* #ffb7ee; */
+            thead.sr-only-thead-collapse {
+              font-size: 0;
+              .sr-only { font-size: var(--bpu-sm); }
+            }
+            td, th {
+              border: var(--bpu-1px) solid #FF00C7;
+              padding: var(--bpu-4px);
+              &:has(.sr-only) {
+                width: 1px;
+                max-width: 1px;
+                height: 1px;
+                max-height: 1px;
+                border: none;
+                padding: 0px;
+              }
+            }
+          }
+
+          strong {
+            color: #FF00C7;
+          }
+        }
+        .node-image-matrix {
+          margin-top: -1px;
+          th {
+            font-weight: normal;
+          }
+          td {
+            white-space: nowrap;
+            text-align: center;
+          }
+        }
+
+        ol {
+          padding-left: var(--bpu-16px);
+          li {
+            margin-bottom: var(--bpu-8px);
+          }
+        }
+      </style>
+
+      <section id="node">
+        <h3>Even better default breakpoints for nodes</h3>
+        <p>Ten heavily researched component level breakpoints, rooted in the present, across long standing patterns of several industries and their deep IAB influence. Delivered with an unbeatable, intuition-enhancing alias-matrix that will outlast and outshine industry standards of the stage level t-shirt breakpoints.</p>
+        <details class="docs-blade" id="docs-node">
+          <summary><h4>Node Default Breakpoints and Aliases</h4></summary>
+          <div>
+            <p>
+              One of the challenges with industry-standard t-shirt sizing used for <strong>breakpoint names</strong> on the stage is that you have to use them repeatedly to build an intuitive <em>feeling</em> for their actual <code>width</code>. However, familiarization with one size strengthens the adjacent ones because t-shirt sizes are a commonly understood, ordered progression.
+            </p>
+            <p>
+              In order to normalize individual node (component) breakpoints in your design practice, I needed to minimize the barrier to adoption. That meant:
+            </p>
+            <ol>
+              <li>Making the names easy to memorize.</li>
+              <li>Establishing <strong>unique names</strong> distinct from t-shirt sizing alone.</li>
+              <li>Ensuring the names are common enough that intuitive <em>familiarity</em> already exists.</li>
+              <li>Ensuring the names are relatively progressive in <code>width</code> <em>according to that intuition</em>.</li>
+              <li>Shortcutting the <code>width</code> familiarization phase by anchoring each <strong>breakpoint name</strong> to a corresponding, real-world physical object - establishing that intuitive <em>feeling</em> for the available <code>width</code> early.</li>
+            </ol>
+            <p>
+              If you subscribe to the idea that naming things is the hardest part of computer science, then I appreciate your grace if the following reference table I built to accomplish #5 doesn't pass international or individual rigor like a standardized test question. 😶 However, I do believe the concept is practical for building intuitive awareness in how much <code>width</code> each <strong>breakpoint name</strong> represents.
+            </p>
+            <div class="data-table pink-overscroll">
+              <table class="node-image-matrix">
+                <thead class="sr-only-thead-collapse">
+                  <tr>
+                    <th><span class="sr-only"></span></th>
+                    <th><span class="sr-only">note</span></th>
+                    <th><span class="sr-only">card</span></th>
+                    <th><span class="sr-only">page</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th rowspan="4"><span class="sr-only">small</span></th>
+                    <td><strong>sm-note</strong></td>
+                    <td><strong>sm-card</strong></td>
+                    <td><strong>sm-page</strong></td>
+                  </tr>
+                  <tr>
+                    <td><strong>160</strong> - 240px (1.67" - 2.50")</td>
+                    <td><strong>240</strong> - 300px (2.50" - 3.13")</td>
+                    <td><strong>300</strong> - 384px (3.13" - 4.00")</td>
+                  </tr>
+                  <tr>
+                    <td><div>TODO:IMG</div></td>
+                    <td><div>TODO:IMG</div></td>
+                    <td><div>TODO:IMG</div></td>
+                  </tr>
+                  <tr>
+                    <td>Ex: Torn "IOU" Scrap Note</td>
+                    <td>Ex: Tarot Card</td>
+                    <td>Ex: Passport</td>
+                  </tr>
+
+                  <tr>
+                    <th rowspan="4"><span class="sr-only">medium</span></th>
+                    <td><strong>md-note</strong></td>
+                    <td><strong>md-card</strong></td>
+                    <td><strong>md-page</strong></td>
+                  </tr>
+                  <tr>
+                    <td><strong>384</strong> - 468px (4.00" - 4.88")</td>
+                    <td><strong>468</strong> - 600px (4.88" - 6.25")</td>
+                    <td><strong>600</strong> - 728px (6.25" - 7.58")</td>
+                  </tr>
+                  <tr>
+                    <td><div>TODO:IMG</div></td>
+                    <td><div>TODO:IMG</div></td>
+                    <td><div>TODO:IMG</div></td>
+                  </tr>
+                  <tr>
+                    <td>Ex: Large Square Post-it</td>
+                    <td>Ex: Standard Postcard</td>
+                    <td>Ex: Comic Book</td>
+                  </tr>
+
+                  <tr>
+                    <th rowspan="4"><span class="sr-only">large</span></th>
+                    <td><strong>lg-note</strong></td>
+                    <td><strong>lg-card</strong></td>
+                    <td><strong>lg-page</strong></td>
+                  </tr>
+                  <tr>
+                    <td><strong>728</strong> - 800px (7.58" - 8.33")</td>
+                    <td><strong>800</strong> - 970px (8.33" - 10.10")</td>
+                    <td><strong>970</strong>+ (10.10"+)</td>
+                  </tr>
+                  <tr>
+                    <td><div>TODO:IMG</div></td>
+                    <td><div>TODO:IMG</div></td>
+                    <td><div>TODO:IMG</div></td>
+                  </tr>
+                  <tr>
+                    <td>Ex: A4 Lined Notepad</td>
+                    <td>Ex: Dual-Fan Graphics Card</td>
+                    <td>Ex: Sideways Grid Systems Book</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>For your own breakpoint values or to teach our defaults from your perspective, providing your own references in a similar breakdown could be of great benefit to those on your team and/or to the wider audience who shares your perspectives.</p>
+            <p>Here's the full CSS for these default values and aliases if you'd like to make your own variant. The same rules from stage for the smallest breakpoint still (always) apply: It doesn't break at the smallest position defined and instead it only defines the <code>--bup-16px = 16px</code> point within the range of 0 to the <em>next</em> breakpoint position.</p>
+            <code class="code-block">
+              :where(.bp-node) {
+                --bp-0-at: 120;
+                --qgte-coin: var(--bp-qgte-0);
+                --qlt-coin: var(--bp-qlt-0);
+                --qin-coin: var(--bp-qin-0);
+                --fluid-coin: var(--bp-fluid-0);
+                /* the --fluid-* vars are aliased for use in --bp-fluidity */
+
+                --bp-1-at: 160;
+                --qgte-sm-note: var(--bp-qgte-1);
+                --qlt-sm-note: var(--bp-qlt-1);
+                --qin-sm-note: var(--bp-qin-1);
+                --fluid-sm-note: var(--bp-fluid-1);
+
+                --bp-2-at: 240;
+                --qgte-sm-card: var(--bp-qgte-2);
+                --qlt-sm-card: var(--bp-qlt-2);
+                --qin-sm-card: var(--bp-qin-2);
+                --fluid-sm-card: var(--bp-fluid-2);
+
+                --bp-3-at: 300;
+                --qgte-sm-page: var(--bp-qgte-3);
+                --qlt-sm-page: var(--bp-qlt-3);
+                --qin-sm-page: var(--bp-qin-3);
+                --fluid-sm-page: var(--bp-fluid-3);
+
+                --bp-4-at: 384;
+                --qgte-md-note: var(--bp-qgte-4);
+                --qlt-md-note: var(--bp-qlt-4);
+                --qin-md-note: var(--bp-qin-4);
+                --fluid-md-note: var(--bp-fluid-4);
+
+                --bp-5-at: 468;
+                --qgte-md-card: var(--bp-qgte-5);
+                --qlt-md-card: var(--bp-qlt-5);
+                --qin-md-card: var(--bp-qin-5);
+                --fluid-md-card: var(--bp-fluid-5);
+
+                --bp-6-at: 600;
+                --qgte-md-page: var(--bp-qgte-6);
+                --qlt-md-page: var(--bp-qlt-6);
+                --qin-md-page: var(--bp-qin-6);
+                --fluid-md-page: var(--bp-fluid-6);
+
+                --bp-7-at: 728;
+                --qgte-lg-note: var(--bp-qgte-7);
+                --qlt-lg-note: var(--bp-qlt-7);
+                --qin-lg-note: var(--bp-qin-7);
+                --fluid-lg-note: var(--bp-fluid-7);
+
+                --bp-8-at: 800;
+                --qgte-lg-card: var(--bp-qgte-8);
+                --qlt-lg-card: var(--bp-qlt-8);
+                --qin-lg-card: var(--bp-qin-8);
+                --fluid-lg-card: var(--bp-fluid-8);
+
+                --bp-9-at: 970;
+                --qgte-lg-page: var(--bp-qgte-9);
+                --qlt-lg-page: var(--bp-qlt-9);
+                --qin-lg-page: var(--bp-qin-9);
+                --fluid-lg-page: var(--bp-fluid-9);
+              }
+            </code>
+            <h5 id="node-breakpoint-values">Why these specific values?</h5>
+            <p>
+              Just like the stage breakpoints, their positions are only useful because they represent widths where the most common layout shifts occur. Unlike stage breakpoints that vary primarily as a response to broad strokes of any boxed content, node breakpoint usage varies primarily based on <em>specifically what their content is</em> - and at finer scales.
+            </p>
+            <p>
+              Because of that, it is much <em>less likely</em> to have designs at each breakpoint. Which means it is much <em>more likely</em> for you to use <code>--bp-fluidity</code> and opt-in to specific breakpoints from the full set on each node.
+            </p>
+            <aside class="aside-callout">
+              <p>Within a collection of similar components, they might all share the same subset of the global node breakpoints (using the same <code>--bp-fluidity</code> value). However, it is not very likely that different component collections would continue to use the same <code>--bp-fluidity</code> value set.</p>
+            </aside>
+            <p>
+              <em>So why define a common set at all?</em> When a set of components are placed in the same-width flexible container, they are more likely to all "break" into their new layout at the same time. At the broadest level, these node breakpoints correspond to the most common column sizes embedded in the most likely layouts designed for each of the stage breakpoints. Historically, standard IAB ad sizes are the source of most common layout column widths across the web. Their influence is so pervasive that even sites who never touched an ad adopted similar layout divisions.
+            </p>
+
+            <dl>
+              <dt><code>120px</code> (coin)</dt>
+              <dd>From <code>0px</code> to <code>160px</code>, baselined <code>--bpu-1px = 1px</code> at <code>120px</code>. This is the absolute minimum space for interactive UI. Under 160px, a component is usually just a large avatar, a badge, or a tightly packed icon group. Text here is severely limited, often requiring truncation or switching to icon-only layouts.</dd>
+              <dd>A responsive example component could be a small status indicator light about the size of a golden Lego coin, that when placed somewhere larger would have text, larger still a simple status-history chart, larger still with details on the chart, and so-on until the same component is a full data table and mini-dashboard.</dd>
+
+              <dt><code>160px</code> (sm-note)</dt>
+              <dd>Historically the "wide skyscraper" ad width, 160px is the standard dimension for tight sidebar widgets, vertical navigation trees, and complex tooltips. It provides just enough room for a single, short word per line.</dd>
+
+              <dt><code>240px</code> (sm-card)</dt>
+              <dd>A common width for dense product grid items on mobile. At 240px, a component finally has enough room to comfortably stack a thumbnail image above a multi-line title and a button.</dd>
+
+              <dt><code>300px</code> (sm-page)</dt>
+              <dd>Rooted in the 300x250 "Medium Rectangle" standard ad that influenced nearly every layout. This is the minimum comfortable width for a standalone block of text, a standard dropdown menu, or a popover. It is the baseline for readable paragraph text inside a constrained space.</dd>
+
+              <dt><code>384px</code> (md-note)</dt>
+              <dd>Exactly 24rem (assuming a 16px base) - a great width for text content. Designers often use this dimension for comfortable reading asides, medium-sized feature cards, or sliding drawer panels.</dd>
+
+              <dt><code>468px</code> (md-card)</dt>
+              <dd>Historically the "Full Banner" width. When a component reaches 468px, it is often too wide to keep its internal elements stacked vertically. This is the perfect breakpoint to switch a stacked card into a horizontal, small image-left/text-right layout.</dd>
+
+              <dt><code>600px</code> (md-page)</dt>
+              <dd>600px is historically the standard width for HTML emails and the maximum comfortable line-length for long-form reading. If a text-heavy component grows past this, its internal text needs to be constrained or broken into columns.</dd>
+
+              <dt><code>728px</code> (lg-note)</dt>
+              <dd>The "Leaderboard" width. At this size, a component is usually spanning the entire width of a main content column. It is ideal for horizontal list items, data-dense rows, and complex horizontal forms.</dd>
+
+              <dt><code>800px</code> (lg-card)</dt>
+              <dd>When a component reaches 800px, it has the room to be multi-functional. This is the standard width for complex settings modals, large feature highlights, and large interactive data cards.</dd>
+
+              <dt><code>970px</code> (lg-page)</dt>
+              <dd>Room to host the historical standard 960 and 970 grid systems. At 970px, the component is essentially a full page layout nested inside a larger system. It has enough room to run its own internal multi-column grid, completely independent of the stage.</dd>
+            </dl>
+            <p>If a single component is much larger than this, it should use stage breakpoints instead.</p>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-node">
+          <summary><h4>Tests</h4></summary>
+          <div><p>TODO</p></div>
+        </details>
+      </section>
+    </article>
+
+    <style>
+      #more > header {
+        font-size: var(--bpu-sm);
+        text-align: center;
+        margin-bottom: var(--bpu-56px);
+
+        p {
+          margin-bottom: var(--bpu-16px);
+        }
+      }
+
+      svg[alt="GitHub"] {
+        height: 1.5em;
+        vertical-align: bottom;
+      }
+      svg[alt="npm"] {
+        height: 1.125em;
+        vertical-align: bottom;
+      }
+      main a {
+        color: #FF00C7;
+      }
+    </style>
+    <section id="more">
+      <header>
+        <h2 class="sr-only">Advanced Tools</h2>
+        <p>If that is all the functionality you want, PropJockey's happy to deliver! <a href="https://github.com/propjockey/breakpoint-system"><svg alt="GitHub" xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 34 34"><path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a> <a href="https://www.npmjs.com/package/@propjockey/breakpoint-system"><svg alt="npm" viewBox="0 0 905 290"><path fill="currentColor" d="M240,250h100v-50h100V0H240V250z M340,50h50v100h-50V50z M480,0v200h100V50h50v150h50V50h50v150h50V0H480z M0,200h100V50h50v150h50V0H0V200z"></path></svg></a></p>
+        <p>...but our tools are built to <em>exceed</em> expectations &mdash; <em>and create new dreams</em>.</p>
+      </header>
+
+      <style>
+        #bpu-typography-table {
+          margin-top: -1px;
+          td, th {
+            white-space: nowrap;
+            text-align: center;
+          }
+        }
+      </style>
+      <article id="bpu">
+        <h3>The Breakpoint Unit</h3>
+        <dl>
+          <dt style="font-weight: normal; font-size: var(--bpu-sm);">Using --bpu-* means:</dt>
+          <dd>No more clamp vw math, or rem decimals.</dd>
+          <dd>You design with <em>pixels</em> at your breakpoints.</dd>
+          <dd>You implement with the <code>bpu</code> equivalent.</dd>
+          <dd>You get flawless, fluid, automatic scaling breakpoint to breakpoint.</dd>
+          <dd>Frictionless designer to engineer handoffs.</dd>
+          <dd>Your users get all the benefits of the single most accessible breakpoint system ever created.</dd>
+          <dd>Considerably less effort than traditional implementations.</dd>
+        </dl>
+        <aside>
+          <h4 style="font-weight: normal; font-size: var(--bpu-sm);">BPU values "reset" at your breakpoints, ready for 1:1 implementation of the designer's vision.</h4>
+          <div>
+            <code class="code-block">
+              --bpu-1px = 1px
+              ...
+              --bpu-20px = 20px
+              ...
+
+              --bpu-1 = 1
+              ...
+
+              --bpu-1rem = 1rem // if you insist
+            </code>
+            They scale up proportionately from the current lower bound breakpoint as the view widens.
+          </div>
+        </aside>
+        <details class="docs-blade" id="docs-bpu">
+          <summary><h4>BPU Documentation</h4></summary>
+          <div>
+            <p style="display: none;">
+              TODO - you can add a button to emulate mobile on any screensize for a11y
+            </p>
+            <p>Most design systems are built with a highly standardized set of <code>&lt;length&gt;</code> values for their design tokens. For example, these are some of the most common value sets and corresponding tokens from popular design systems:</p>
+            <dl>
+              <dt>Borders and dividers</dt>
+              <dd>px: 1, 2</dd>
+              <dd>eg: --border-width-default, --border-width-thick, --spectrum-global-dimension-static-size-10</dd>
+
+              <dt>Tight content spacing</dt>
+              <dd>px: 4, 5, 6, 8, 10, 12</dd>
+              <dd>eg: --lwc-spacingSmall, --spacer-8, --ds-space-050</dd>
+
+              <dt>Typography, UI, and Touch</dt>
+              <dd>px: 14, 16, 18, 20, 22, 24</dd>
+              <dd>eg: --text-lg, --spacing-4, --lwc-fontSizeMedium, --spectrum-global-dimension-font-size-200</dd>
+
+              <dt>Structural, Headers, and Gaps</dt>
+              <dd>px: 28, 32, 36, 40, 44, 48, 56, 64</dd>
+              <dd>eg: --spacer-32, --ds-space-400, --md-sys-typescale-headline-small-size, --lwc-height-header, --lwc-spacingXLarge, --touch-target-min</dd>
+
+              <dt>Page Layout</dt>
+              <dd>px: 72, 80, 96, 128, 160</dd>
+              <dd>eg: --spacer-80, --spacer-128, --cds-spacing-12, --spectrum-global-dimension-size-1200</dd>
+            </dl>
+            <p>
+              While this isn't comprehensive, the "skipped" values are a common pattern. Since <code>@propjockey/breakpoint-system</code> isn't a full on design system itself (but is very likely to be the basis of most design systems moving forward from its release), we wanted to simplify what's available for quick usage of <code>--bpu-*</code>. These --bpu values <em>could be</em> aliased into your unique design system tokens as needed.
+            </p>
+            <p>
+              Our structural breakpoint unit comes in two main sets:<br />
+              <code>&lt;number&gt;</code> (<code>--bpu-1</code>) and<br />
+              <code>&lt;length&gt;</code> (<code>--bpu-1px</code>).<br />
+            </p>
+            <dl>
+              <dt>All the follwoing bpu values are available in both sets.</dt>
+              <dd><code>--bpu-1</code> <code>--bpu-1px</code></dd>
+              <dd>Multiples of 5 up to and including 50.</dd>
+              <dd>All even numbers up to and including 50.</dd>
+              <dd>56, 64, 72, 80, 96, 128, 160, and 3 (mainly for focus rings)</dd>
+            </dl>
+            <p>You can calc() for any values outside of this, <code>calc(var(--bpu-1) * -13px)</code> or <code>calc(var(--bpu-1px) * -13)</code> for example.</p>
+            <p>We also included a one-off: <code>--bpu-1rem</code> and its numeric equivalent <code>--bpu-1rem-n</code> in case you wanted to spin off your own set or use it in specific scenarios.</p>
+            <aside class="aside-callout">
+              <p><code>--bpu-1rem</code> respects your <code>--bp-user-em</code> setting, so if you've opted out of user scaling and the user has scaled their text, this value is unchanged. Like all other breakpoint units, it equals your intended rem size at the breakpoints, plus the fluid resizing built in. Typically this would only be used to integrate with existing sites since bpu removes the need to use REM in designs.</p>
+            </aside>
+            <h5 id="bpu-a11y-wins">Major Accessibility Win</h5>
+            <p>
+              The breakpoint unit and our automatic breakpoint position adjustment based on the user system font-size change work together in an amazing way. The most common font-size adjustment is <code>25%</code> bigger than the default 16px.
+            </p>
+            <dl>
+              <dt>When the font size is 25% bigger:</dt>
+              <dd>Breakpoints transform into 125% of their original value.</dd>
+              <dd>Breakpoint ranges extend their fluid <code>bpu</code> growth phase instead of tripping into the next design.</dd>
+              <dd><code>bpu</code> values start at 25% magnification when the new breakpoint location trips.</dd>
+              <dd>Elements at a width within the first 25% of the breakpoint range will render the previous breakpoint design instead.</dd>
+              <dd>Elements beyond the first 25% of the breakpoint range will begin showing the same current breakpoint at a minimum of 25% magnification.</dd>
+            </dl>
+            <p>There is absolutely no layout jank or overflowing content to worry about. We render what there is space for - the 25% magnification is already part of the experience for everyone viewing the page at that size, it's the first 25% that doesn't get shown (because we were showing the previous breakpoint design even larger than other users' experience). Your design, in pixels, implemented with the <code>bpu</code> equivalent, is exactly what is shown in all cases - just magnified like images when set to 100vw as you resize the window.</p>
+            <p>Automatically.</p>
+          </div>
+        </details>
+
+        <details class="docs-blade" id="docs-bpu-typography">
+          <summary><h4>BPU Typography Docs</h4></summary>
+          <div>
+            <p>
+              Our our typography breakpoint units come in two main sets of t-shirt sizes:<br />
+              <code>&lt;number&gt;</code> (<code>--bpu-sm-n</code>) and<br />
+              <code>&lt;length&gt;</code> (<code>--bpu-sm</code>).<br />
+              The full range is <code>xxs, xs, sm, md, lg, xl, xxl, xxxl</code><br />
+              <code>sm</code> is the 16px baseline, independent of your REM value.
+            </p>
+            <div>
+              <div style="font-family: monospace; font-size: var(--bpu-xxs);">--bpu-xxs</div>
+              <div style="font-family: monospace; font-size: var(--bpu-xs);">--bpu-xs</div>
+              <div style="font-family: monospace; font-size: var(--bpu-sm);">--bpu-sm</div>
+              <div style="font-family: monospace; font-size: var(--bpu-md);">--bpu-md</div>
+              <div style="font-family: monospace; font-size: var(--bpu-lg);">--bpu-lg</div>
+              <div style="font-family: monospace; font-size: var(--bpu-xl);">--bpu-xl</div>
+              <div style="font-family: monospace; font-size: var(--bpu-xxl);">--bpu-xxl</div>
+              <div style="font-family: monospace; font-size: var(--bpu-xxxl);">--bpu-xxxl</div>
+            </div>
+            <p>
+              The typography breakpoint units differ in that they do not shrink when rendered in areas below your smallest breakpoint. They remain locked at their defined sizes until the available space is larger than the breakpoint, at which point they grow fluidly along with the rest of the breakpoint unit family.
+            </p>
+            <aside class="aside-callout">
+              <p>
+                To use these, your smallest breakpoint "xxs" designs must allow the text to wrap, break-word, and expand vertically - which is already the status quo in mobile designs.
+              </p>
+            </aside>
+            <p>Again only while in the smallest breakpoint range, they also differ in that the user's system font-size adjustment is proportionately applied directly to these units to guarantee the minimum target a11y text magnification. The structural bpu values do not directly apply the user scaling because, as a byproduct of their fluid growth and breakpoint shifting, they never render below the user's scaling in spaces larger than the smallest breakpoint; Producing that perfect non-overflowing zero-layout-jank accessibility magnification without directly using the scalar.</p>
+            <p>
+              (we can't shift breakpoints to render below the smallest one, so in that smallest range for typography, that magnification has to be applied directly onto the unit)
+            </p>
+            <p>The functionality of this typography unit exists in a 1-unit basis variable you can use to spin off your own sets.<code>--bpu-typography-basis-n</code> and/or <code>--bpu-typography-basis</code></p>
+            <p>The default <code>xxs, xs, and sm</code> values are exactly <code>12, 14, and 16</code> times this basis.</p>
+            <code class="code-block">
+              --bpu-xxs-n: calc(
+                var(--bpu-typography-basis-n) * 12
+              );
+              --bpu-xs-n: calc(
+                var(--bpu-typography-basis-n) * 14
+              );
+              --bpu-sm-n: calc(
+                var(--bpu-typography-basis-n) * 16
+              );
+              ...
+              --bpu-typography-basis: calc(
+                var(--bpu-typography-basis-n) * 1px
+              );
+              --bpu-xxs: calc(var(--bpu-xxs-n) * 1px);
+              --bpu-xs: calc(var(--bpu-xs-n) * 1px);
+              --bpu-sm: calc(var(--bpu-sm-n) * 1px);
+            </code>
+            <p>The remaining 5 sizes are harmonic scales of each previous step using <code>--bpu-typography-scalar</code> which defaults to 1.2 x (the Minor Third).</p>
+            <code class="code-block">
+              --bpu-md-n: calc( var(--bpu-sm-n) *
+                var(--bpu-typography-scalar)
+              );
+              --bpu-lg-n: calc( var(--bpu-md-n) *
+                var(--bpu-typography-scalar)
+              );
+              --bpu-xl-n: calc( var(--bpu-lg-n) *
+                var(--bpu-typography-scalar)
+              );
+              --bpu-xxl-n: calc( var(--bpu-xl-n) *
+                var(--bpu-typography-scalar)
+              );
+              --bpu-xxxl-n: calc( var(--bpu-xxl-n) *
+                var(--bpu-typography-scalar)
+              );
+              ...
+              --bpu-md: calc(var(--bpu-md-n) * 1px);
+              --bpu-lg: calc(var(--bpu-lg-n) * 1px);
+              --bpu-xl: calc(var(--bpu-xl-n) * 1px);
+              --bpu-xxl: calc(var(--bpu-xxl-n) * 1px);
+              --bpu-xxxl: calc(var(--bpu-xxxl-n) * 1px);
+            </code>
+            <p>Across all design sizes, your 3 smallest font-sizes should typically never change. While the larger scales should expand as space allows. 1.2 is a suitable step for smaller screens, for larger breakpoint ranges, wider steps are typical.</p>
+            <p>
+              <code>.bp-stage</code> provides a default harmonic step-increase for these typography breakpoint units using a calc() switch on the default query aliases. This allows you to set the font-size of your body and hX tags to one of these units <em>once</em> without having to micro-manage the font-size at every breakpoint. It's built in to the unit itself.
+            </p>
+            <code class="code-block">
+              /* Typography Scalars across bp-stage
+              // xxs, xs: Minor Third @ 1.2
+              // sm, md: Major Third @ 1.25
+              // lg: Perfect Fourth @ 1.333
+              // xl: Augmented Fourth @ 1.414
+              // xxl: Perfect Fifth @ 1.5
+              */
+              --bpu-typography-scalar: calc(
+                var(--qin-xxs) * 1.2 +
+                var(--qin-xs) * 1.2 +
+                var(--qin-sm) * 1.25 +
+                var(--qin-md) * 1.25 +
+                var(--qin-lg) * 1.333 +
+                var(--qin-xl) * 1.414 +
+                var(--qin-xxl) * 1.5
+              );
+            </code>
+            <p>
+              <code>.bp-node</code> provides a very similar default harmonic step-increase for the typography breakpoint units. The default node increase follows <code>.bp-stage</code> closely. Because the largest node breakpoint is only 970 (bigger components like full page width heros should use bp-stage breakpoints) and stage's <code>sm</code> breakpoint is 768, all <code>.bp-node</code> breakpoints use 1.2 (Minor Third) as the componding scalar, except for the two biggest.<code>lg-card (800)</code> and <code>lg-page (970)</code> use 1.25; <code>lg-note (728)</code> remains at 1.2 with the rest.
+            </p>
+            <h5 id="bpu-typography-for-design-tools">BPU Typography for Design Tools</h5>
+            <p>To ensure your static designs perfectly match our engine's stage defaults, implement these values using Variable Modes (Figma), or Token Sets (Tokens Studio/Penpot), etc. While the engine handles the fluidity between breakpoints, these hardcoded values are your baselines for each artboard size. The width of each artboard is the exact size of the corresponding stage or node breakpoint:</p>
+            <div class="data-table pink-overscroll">
+              <table id="bpu-typography-table">
+                <thead>
+                  <tr>
+                    <th>Token/Var</th>
+                    <th>bp-stage: xxs, xs<br />(375, 480)</th>
+                    <th>bp-stage: sm, md<br />(768, 1024)</th>
+                    <th>bp-stage: lg<br />(1280)</th>
+                    <th>bp-stage: xl<br />(1440)</th>
+                    <th>bp-stage: xxl<br />(1920)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>sm to xxxl scale</td>
+                    <td>1.2x Minor 3rd</td>
+                    <td>1.25x Major 3rd</td>
+                    <td>1.333x Perfect 4th</td>
+                    <td>1.414x Aug 4th</td>
+                    <td>1.5x Perfect 5th</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-xxs</strong></td>
+                    <td>12.00px</td>
+                    <td>12.00px</td>
+                    <td>12.00px</td>
+                    <td>12.00px</td>
+                    <td>12.00px</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-xs</strong></td>
+                    <td>14.00px</td>
+                    <td>14.00px</td>
+                    <td>14.00px</td>
+                    <td>14.00px</td>
+                    <td>14.00px</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-sm</strong></td>
+                    <td>16.00px</td>
+                    <td>16.00px</td>
+                    <td>16.00px</td>
+                    <td>16.00px</td>
+                    <td>16.00px</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-md</strong></td>
+                    <td>19.20px</td>
+                    <td>20.00px</td>
+                    <td>21.33px</td>
+                    <td>22.62px</td>
+                    <td>24.00px</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-lg</strong></td>
+                    <td>23.04px</td>
+                    <td>25.00px</td>
+                    <td>28.43px</td>
+                    <td>31.98px</td>
+                    <td>36.00px</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-xl</strong></td>
+                    <td>27.65px</td>
+                    <td>31.25px</td>
+                    <td>37.90px</td>
+                    <td>45.22px</td>
+                    <td>54.00px</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-xxl</strong></td>
+                    <td>33.18px</td>
+                    <td>39.06px</td>
+                    <td>50.52px</td>
+                    <td>63.94px</td>
+                    <td>81.00px</td>
+                  </tr>
+                  <tr>
+                    <td><strong>--bpu-xxxl</strong></td>
+                    <td>39.82px</td>
+                    <td>48.83px</td>
+                    <td>67.34px</td>
+                    <td>90.41px</td>
+                    <td>121.50px</td>
+                  </tr>
+                  <tr>
+                    <td>also used by<br />.bp-node</td>
+                    <td>coin, sm-note,<br />sm-card, sm-page,<br />md-note, md-node,<br />md-page, lg-note</td>
+                    <td>lg-card, lg-page</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p><strong>Figma: Manually Use Variable Modes</strong></p>
+            <p>Create one variable collection named "Typography."</p>
+            <p>Create 5 Modes named after the columns in the table (e.g., "bp-stage xxs and xs", "bp-stage sm and md", etc.).</p>
+            <p>Create a copy of the first two Modes for node breakpoints, "bp-node coin to lg-note", "bp-node lg-card lg-page".</p>
+            <p>Map the Tokens: Create variables for --bpu-xxs through --bpu-xxxl.</p>
+            <p>When you move a design frame from the "bp-stage lg" mode to the "bp-stage xl" mode, all font sizes will update to the corresponding bpu specs.</p>
+            <section>
+              <h6 id="bpu-typography-w3c-json">W3C Design Token Format ( bpu-tokens.json )</h6>
+              <p>You can import these as tokens into most design tools for a quick start.</p>
+              <p>The JSON keys below (stage-xxs-xs, etc) correspond to the default stage breakpoints. In your design tool (like Tokens Studio or Penpot), these will appear as your Token Sets. Toggle the set that matches the viewport range you are currently designing for. <a href="./assets/bpu-tokens.json" download="bpu-tokens.json">bpu-tokens.json</a></p>
+              <div class="data-table pink-overscroll">
+                <code class="code-block">
+                  {
+                    "stage-xxs-xs": {
+                      "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+                      "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+                      "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+                      "bpu-md": { "$value": "19.20px", "$type": "dimension" },
+                      "bpu-lg": { "$value": "23.04px", "$type": "dimension" },
+                      "bpu-xl": { "$value": "27.65px", "$type": "dimension" },
+                      "bpu-xxl": { "$value": "33.18px", "$type": "dimension" },
+                      "bpu-xxxl": { "$value": "39.82px", "$type": "dimension" }
+                    },
+                    "stage-sm-md": {
+                      "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+                      "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+                      "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+                      "bpu-md": { "$value": "20.00px", "$type": "dimension" },
+                      "bpu-lg": { "$value": "25.00px", "$type": "dimension" },
+                      "bpu-xl": { "$value": "31.25px", "$type": "dimension" },
+                      "bpu-xxl": { "$value": "39.06px", "$type": "dimension" },
+                      "bpu-xxxl": { "$value": "48.83px", "$type": "dimension" }
+                    },
+                    "stage-lg": {
+                      "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+                      "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+                      "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+                      "bpu-md": { "$value": "21.33px", "$type": "dimension" },
+                      "bpu-lg": { "$value": "28.43px", "$type": "dimension" },
+                      "bpu-xl": { "$value": "37.90px", "$type": "dimension" },
+                      "bpu-xxl": { "$value": "50.52px", "$type": "dimension" },
+                      "bpu-xxxl": { "$value": "67.34px", "$type": "dimension" }
+                    },
+                    "stage-xl": {
+                      "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+                      "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+                      "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+                      "bpu-md": { "$value": "22.62px", "$type": "dimension" },
+                      "bpu-lg": { "$value": "31.98px", "$type": "dimension" },
+                      "bpu-xl": { "$value": "45.22px", "$type": "dimension" },
+                      "bpu-xxl": { "$value": "63.94px", "$type": "dimension" },
+                      "bpu-xxxl": { "$value": "90.41px", "$type": "dimension" }
+                    },
+                    "stage-xxl": {
+                      "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+                      "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+                      "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+                      "bpu-md": { "$value": "24.00px", "$type": "dimension" },
+                      "bpu-lg": { "$value": "36.00px", "$type": "dimension" },
+                      "bpu-xl": { "$value": "54.00px", "$type": "dimension" },
+                      "bpu-xxl": { "$value": "81.00px", "$type": "dimension" },
+                      "bpu-xxxl": { "$value": "121.50px", "$type": "dimension" }
+                    },
+                    "node-coin-to-lg-note": {
+                      "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+                      "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+                      "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+                      "bpu-md": { "$value": "19.20px", "$type": "dimension" },
+                      "bpu-lg": { "$value": "23.04px", "$type": "dimension" },
+                      "bpu-xl": { "$value": "27.65px", "$type": "dimension" },
+                      "bpu-xxl": { "$value": "33.18px", "$type": "dimension" },
+                      "bpu-xxxl": { "$value": "39.82px", "$type": "dimension" }
+                    },
+                    "node-lg-card-lg-page": {
+                      "bpu-xxs": { "$value": "12.00px", "$type": "dimension" },
+                      "bpu-xs": { "$value": "14.00px", "$type": "dimension" },
+                      "bpu-sm": { "$value": "16.00px", "$type": "dimension" },
+                      "bpu-md": { "$value": "20.00px", "$type": "dimension" },
+                      "bpu-lg": { "$value": "25.00px", "$type": "dimension" },
+                      "bpu-xl": { "$value": "31.25px", "$type": "dimension" },
+                      "bpu-xxl": { "$value": "39.06px", "$type": "dimension" },
+                      "bpu-xxxl": { "$value": "48.83px", "$type": "dimension" }
+                    }
+                  }
+                </code>
+              </div>
+              <div class="tool-guide">
+                <strong>1. Figma (via Tokens Studio)</strong><br />
+                <ul>
+                  <li>Open the <strong>Tokens Studio</strong> plugin.</li>
+                  <li>Click the <strong>Settings</strong> tab and look for the <strong>Load from File</strong> or <strong>Tools &gt; Import</strong> section.</li>
+                  <li>Paste the JSON content.</li>
+                </ul>
+                <p><strong>Note:</strong> The plugin will automatically detect the top-level keys (e.g., <code>stage-xxs-xs</code>, <code>node-coin-to-lg-note</code>) as <strong>Token Sets</strong>. You can click the checkboxes next to each set to "activate" that mode on your current artboard.</p>
+              </div>
+
+              <div class="tool-guide">
+                <strong>2. Penpot (Native Support)</strong><br />
+                <ul>
+                  <li>In your Penpot file, open the <strong>Assets</strong> panel.</li>
+                  <li>Look for the <strong>Design Tokens</strong> section.</li>
+                  <li>Click the <strong>Import</strong> icon (or look for the "..." menu) and upload <code>bpu-tokens.json</code>.</li>
+                </ul>
+                <p>Penpot will map these to your shared styles, allowing you to switch between the stage and node ranges globally.</p>
+              </div>
+
+              <div class="tool-guide">
+                <strong>3. Sketch (via Third-Party Plugins)</strong><br />
+                <p>While Sketch does not yet support W3C's JSON natively, plugins like <strong>Lingo</strong> or <strong>Specify</strong> can use this JSON and sync it directly to your Layer and Text Styles.</p>
+              </div>
+            </section>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-bpu">
+          <summary><h4>Tests</h4></summary>
+          <div><p>Unit tests for BPU boundary math.</p></div>
+        </details>
+      </article>
+
+      <style>
+        #bpu-breakpoint-accessibility-tutorial,
+        #bpu-constraints-tutorial {
+          samp:not(.no-parens)::before { content: "(" / ""; }
+          samp:not(.no-parens)::after { content: ")" / ""; }
+
+          background: #1b1124;
+          color: #ffffff;
+          border-top: var(--bpu-4px) solid #FF00C7;
+          border-bottom: var(--bpu-4px) solid #FF00C7;
+          border-radius: var(--bpu-12px);
+          padding-block: var(--bpu-8px);
+          padding-inline: var(--bpu-6px);
+          margin-bottom: var(--bpu-32px);
+          margin-inline: calc(-1 * var(--bpu-6px));
+
+          h3:not(summary h3) {
+            color: #FF00C7;
+          }
+
+          p > code {
+            background: #ffb7ee;
+            color: #1b1124;
+          }
+        }
+        .code-pool {
+          .watch-vars {
+            samp {
+              display: block;
+            }
+          }
+          .emulated-stage-viewport {
+            width: 100%;
+            container-type: inline-size;
+
+            .emulated-stage {
+              --bpu-aspect-ratio: 16 / 9;
+              display: contents;
+            }
+          }
+          .right-panel {
+            padding-top: var(--bpu-8px);
+            display: grid;
+            grid-template-areas: "a a" "b b" "c d" "e f" "g g";
+            gap: var(--bpu-8px);
+            grid-template-columns: 15fr 11fr;
+            > :nth-child(1) { grid-area: a; }
+            > :nth-child(2) { grid-area: b; }
+            > :nth-child(3) { grid-area: c; }
+            > :nth-child(4) { grid-area: d; }
+            > :nth-child(5) { grid-area: e; }
+            > :nth-child(6) { grid-area: f; }
+            > :nth-child(7) { grid-area: g; }
+            .code-block {
+              margin: 0px;
+            }
+          }
+        }
+
+        @keyframes safari-firefox-compat {
+          0%, 33.332% {
+            grid-auto-rows: max-content;
+            grid-template-rows: max-content;
+            grid-template-columns: 1fr;
+            grid-template-areas: "tut-head" "tut-body-ad" "tut-body" "tut-160" "tut-120";
+          } /* index 0 */
+          33.333%, 66.665% {
+            grid-template-columns: 1fr calc(var(--bpu-1px) * 160);
+            grid-template-areas: "tut-head tut-head" "tut-body-ad tut-body-ad" "tut-body tut-160" "tut-120 tut-120";
+            grid-template-rows: auto var(--bpu-96px) max-content;
+          } /* index 1 */
+          66.666%, 100% {
+            grid-template-columns: calc(var(--bpu-1px) * 120) 1fr calc(var(--bpu-1px) * 160);
+            grid-template-areas: "tut-head tut-head tut-head" "tut-120 tut-body-ad tut-160" "tut-120 tut-body tut-160";
+            grid-template-rows: auto var(--bpu-96px) max-content;
+          } /* index 2 */
+        }
+        #bpu-breakpoint-accessibility-tutorial .emulated-stage {
+          .tut-main {
+            height: var(--bpu-cross-result);
+            outline: var(--bpu-2px) solid #FF00C7;
+            outline-offset: calc(-1 * var(--bpu-2px));
+            font-size: var(--bpu-sm);
+            display: grid;
+            position: relative;
+            gap: var(--bpu-8px);
+            overflow: auto;
+            grid-template-rows: auto var(--bpu-96px) max-content;
+            margin: auto;
+            @container style(--qin-xxs: 1) {
+              grid-auto-rows: max-content;
+              grid-template-rows: max-content;
+              grid-template-columns: 1fr;
+              grid-template-areas: "tut-head" "tut-body-ad" "tut-body" "tut-160" "tut-120";
+            }
+            @container style(--qin-sm: 1) {
+              grid-template-columns: 1fr calc(var(--bpu-1px) * 160);
+              grid-template-areas: "tut-head tut-head" "tut-body-ad tut-body-ad" "tut-body tut-160" "tut-120 tut-120";
+            }
+            @container style(--qin-md: 1) {
+              grid-template-columns: calc(var(--bpu-1px) * 120) 1fr calc(var(--bpu-1px) * 160);
+              grid-template-areas: "tut-head tut-head tut-head" "tut-120 tut-body-ad tut-160" "tut-120 tut-body tut-160";
+            }
+            @supports not ((background: paint(for-chromium)) and (animation-composition: add)) {
+              animation: safari-firefox-compat 3s step-end
+                calc(var(--qin-sm) * -1s + var(--qin-md) * -2s) paused;
+            }
+            .tut-head { grid-area: tut-head; font-size: var(--bpu-xxl); text-align: center; }
+            .tut-120 {
+              grid-area: tut-120;
+              /* position: absolute; safari container queries are broken. just placed this at the bottom for now */
+              @container style(--qin-md: 1) {
+                position: static;
+              }
+            }
+            .tut-body-ad { grid-area: tut-body-ad; }
+            .tut-body { grid-area: tut-body; }
+            .tut-160 { grid-area: tut-160; }
+            > * {
+              min-height: var(--bpu-96px);
+              background: #8100F033;
+              outline: var(--bpu-2px) dashed #FF00C7;
+              outline-offset: calc(-1 * var(--bpu-2px));
+              container-type: inline-size;
+              display: grid;
+              justify-items: center;
+              align-content: center;
+            }
+          }
+          .ad {
+            text-align: center;
+            /* flexible ad units would use the default opting into bigger scaling. Fixed ads would opt out. */
+            --bp-user-em: var(--bp-scaling-opt-out);
+            --bp-fluidity: var(--fluid-sm-note) var(--fluid-sm-page) var(--fluid-lg-note);
+            display: grid;
+            background: repeating-linear-gradient(45deg, #FF00C733 0px var(--bpu-6px), transparent 0 var(--bpu-12px));
+            --width: calc(
+              var(--qin-sm-note) * 160 +
+              var(--qin-sm-page) * 300 +
+              var(--qin-lg-note) * 728
+            );
+            --bpu-main-max: var(--width);
+            width: calc(var(--bpu-1px) * var(--width));
+
+            --height: calc(
+              var(--qin-sm-note) * 600 +
+              var(--qin-sm-page) * 250 +
+              var(--qin-lg-note) * 90
+            );
+            height: calc(var(--bpu-1px) * var(--height));
+
+            &::after {
+              margin: auto;
+              /* Safari is often broken with reading container style when setting a var on a pseudo element.
+              // it often doesn't render until the next frame so you get the previous frame results leaking.
+              // causes crashes easily if animations are involved since it uses volatile deallocated memory.
+              // creating a reduced case is difficult because it seems to be a byproduct of render time and/or memory
+              // use that causes the render queue to stop before being emptied (then flushing that update next frame).
+              // edit: Safari is broken with cq beyond that too... TODO: try to reduce grid position and area cq bugs for them. 🤞
+              */
+              @container style(--qin-sm-note: 1) {
+                --content: " - Wide Skyscraper";
+              }
+              @container style(--qin-sm-page: 1) {
+                --content: " - Medium Rectangle";
+              }
+              @container style(--qin-lg-note: 1) {
+                --content: " - Leaderboard";
+              }
+
+              @supports not ((background: paint(for-chromium)) and (animation-composition: add)) {
+                animation: name-compat 3s step-end
+                  calc(var(--qin-sm-page) * -1s + var(--qin-lg-note) * -2s) paused;
+              }
+              font-size: var(--bpu-sm);
+              counter-reset: w var(--width) h var(--height);
+              content: counter(w) " x " counter(h) var(--content, "");
+            }
+          }
+        }
+        @keyframes name-compat {
+          0%, 33.332% {
+            --content: " - Wide Skyscraper";
+          } /* index 0 */
+          33.333%, 66.665% {
+            --content: " - Medium Rectangle";
+          } /* index 1 */
+          66.666%, 100% {
+            --content: " - Leaderboard";
+          } /* index 2 */
+        }
+      </style>
+      <script>
+        const updateVars = (inputEl, setWith) => {
+          const codePool = inputEl.closest(".code-pool")
+          const stage = codePool.querySelector(".emulated-stage")
+          const remEl = codePool.querySelector("input[type='checkbox']")
+          stage.style.setProperty("--bp-emulate-rem", (setWith ? setWith.checked : remEl.checked) ? 20 : 16)
+          const vpEl = codePool.querySelector("input[type='range']")
+          stage.style.setProperty("--bp-emulate", (setWith ? setWith.vp : vpEl.value))
+          const stageComputedStyle = getComputedStyle(stage)
+          const emulatationScalar = stageComputedStyle.getPropertyValue("--_bp-author-scalar")
+
+          const computedLBEl = codePool.querySelector(".watch-lower-bound samp")
+          computedLBEl.innerHTML = parseFloat(
+            stageComputedStyle.getPropertyValue("--_bp-q-lower-bound")
+          ).toFixed(2) + "px"
+
+          const computedVpEl = codePool.querySelector(".watch-bp-query-on samp")
+          computedVpEl.innerHTML = (parseFloat(
+            stageComputedStyle.getPropertyValue("--bp-query-on")
+          ) / emulatationScalar).toFixed(2) + "px emulated"
+
+          const computedBPU16pxEl = codePool.querySelector(".watch-bpu-16px samp")
+          computedBPU16pxEl.innerHTML = (parseFloat(
+            stageComputedStyle.getPropertyValue("--bpu-16px")
+          ) / emulatationScalar).toFixed(2) + "px"
+
+          const computedBPUSMEl = codePool.querySelector(".watch-bpu-sm samp")
+          computedBPUSMEl.innerHTML = (parseFloat(
+            stageComputedStyle.getPropertyValue("--bpu-sm")
+          ) / emulatationScalar).toFixed(2) + "px"
+        }
+      </script>
+      <section id="bpu-breakpoint-accessibility-tutorial">
+        <h3>Walkthrough of bpu values as we traverse our stage breakpoints at various screen sizes and observe the accessibility effect of a user's system font-size adjustment.</h3>
+        <div class="code-pool">
+          <!-- todo: css and html detail summaries -->
+          <div class="right-panel">
+            <div class="tutorial-slot">
+              <script>
+                createTutorial([
+                  { checked: false, vp: 768, html: "This is an emulation running on actual breakpoint-system CSS and reporting the browser's computed values. There are fixed-width elements in the layout for reference. Click next to continue." },
+                  { checked: false, vp: 768, html: "The current emulated sceeensize is 768px, which is directly on our <strong>sm</strong> stage breakpoint. The breakpoint unit <code>--bpu-16px</code> and the typography equivalent, <code>--bpu-sm</code> are both exactly at their baseline value of 16px." },
+                  { checked: false, vp: 1010, html: "Our emulated viewport has widened to 1010px, which is just shy of the next breakpoint at 1024px. Both bpu values have fluidly expanded to about 21px to fill the space." },
+                  { checked: true, vp: 1010, html: "We're on the same screensize of 1010px but now we're also emulating that the User's System Font Size is set to 'bigger' causing 1rem to be 20px. Nothing at all appears to change becuase the bpu values have already fluidly expanded to deliver the user's preference." },
+                  { checked: true, vp: 1024, html: "We've expanded the viewport to the <strong>md</strong> stage breakpoint at 1024px with the user's 20px rem value. The page is still rendering the <strong>sm</strong> breakpoint with bpu values fluidly expanded less than one third of a pixel to fill the space. If we had flipped to the <strong>md</strong> design, the bpu values would be lower than the user's accessiblity settings." },
+                  { checked: false, vp: 1024, html: "Remaining at 1024px and turning off the user's magnified font-size, the page begins rendering the <strong>md</strong> breakpoint design with bpu values both at 16px." },
+                  { checked: false, vp: 1024, html: "That's the foundation of breakpoint-system. Shortly we'll see the typography breakpoint unit behavior diverge from the structural bpu values in our smalleset, <strong>xxs</strong> stage breakpoint." },
+                  { checked: false, vp: 470, html: "We're at 470px now, just under our <strong>xs</strong> breakpoint at 480px. User's root font-size is still the default 16px at the moment. Both bpu values are the same at about 20px due to expanding fluidly from this breakpoint's 375px basis." },
+                  { checked: true, vp: 470, html: "Same viewport size at 470px but now we're emulating the 20px root font size. Nothing changes yet - both bpu families are the same as previous because they already expanded fluidly to meet the accessibility requirements." },
+                  { checked: true, vp: 375, html: "We've dropped to 375px which is directly on the <strong>xxs</strong> breakpoint. We're still emulating the 20px rem, our typography unit is exactly 20px and the structural <code>--bpu-16px</code> has shrunk below the user's 20px requirement to 16px." },
+                  { checked: false, vp: 375, html: "We turn off the 20px rem emulation at 375px viewport and both bpu families are exactly 16px. It is important for the main structural bpu values to shrink when they drop below this point so your exact width-constrained design can fit on smaller viewports without gaps, margins, and borders eating far more of the screen than intended." },
+                  { checked: false, vp: 320, html: "We've dropped to 320px which is below the <strong>xxs</strong> breakpoint we've designed at. 1rem is still 16 pixels at the moment. Our typography unit <code>--bpu-sm</code> is still exactly 16px because the text should not ever render smaller than its baseline. As is the current status quo, xxs designs are not vertically constrained, allow text to wrap, and allow break-word. The structural breakpoint unit <code>--bpu-16px</code> has shrunk to about 13.6px, allowing the structure of the design to perfectly scale down without causing layout jank, overlapping, or squeezing the typography more than intended." },
+                  { checked: true, vp: 320, html: "Finally, we turn on the user's 20px font-size magnification and the typography breakpoint unit jumps from 16px to 20px - not as a fixed setting, but proportionate to exactly what the user's accessibility setting has been set to. <code>--bpu-16px</code> remains the same at about 13.6px." },
+                ], {
+                  after: (step) => {
+                    setTimeout(() => updateVars(
+                      document.querySelector("#bpu-breakpoint-accessibility-tutorial input"),
+                      { checked: step.checked || false, vp: step.vp || 1200 }
+                    ), 50) // I know my sins.
+                  }
+                })
+              </script>
+            </div>
+            <div style="display: none;">
+              <label>
+                <span>Emulate User Root em = 20px</span>
+                <input type="checkbox" onChange="updateVars(this)" />
+              </label>
+              <label>
+                <span>Emulate screensize:</span>
+                <input type="range" min="320" max="2500" step="1" value="1200" onInput="updateVars(this)" />
+              </label>
+            </div>
+            <code class="code-block watch-var watch-bp-query-on">
+              --bp-query-on: <var>100cqw</var>;
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-16px">
+              var(--bpu-16px)
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-lower-bound">
+              Current breakpoint
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-sm">
+              var(--bpu-sm)
+              <samp>px</samp>
+            </code>
+            <div class="emulated-stage-viewport">
+              <div class="bp-stage emulated-stage" style="--bp-emulate: 1200; --bp-emulate-rem: 16;" aria-hidden="true">
+                <div class="tut-main">
+                  <div class="tut-head">PropJockey<br />breakpoint-system</div>
+                  <div class="tut-120"></div>
+                  <div class="tut-body-ad">
+                    <div class="bp-node ad"></div>
+                  </div>
+                  <div class="tut-body"></div>
+                  <div class="tut-160">
+                    <div class="bp-node ad"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          updateVars(document.querySelector("#bpu-breakpoint-accessibility-tutorial input"))
+        </script>
+        <p style="margin-block: var(--bpu-16px);">
+          The smallest breakpoint has no previous design to flip to with magnification. So within that smallest range, the typography breakpoint units (<code style="white-space: nowrap;">--bpu-sm</code>) apply magnification directly to itself instead - and their values lock in as minimums instead of shrinking when the viewport scales below that smallest breakpoint. Structural breakpoint units (<code>--bpu-16px</code>) remain fluid in this range.
+        </p>
+        <aside class="aside-callout">
+          <p style="margin-block: var(--bpu-16px);">
+            Following the status quo of "xxs" designs, your smallest breakpoint should always allow the text to wrap, break-word, and expand vertically. No other breakpoints in your designs need to consider magnification of text - <em style="color: #FF00C7; font-weight: bold;">as if you were designing static, physical trading cards instead</em>. They need only to work for the expected content at the specific pixel-based size of your designs.
+          </p>
+          <p>
+            <code>@propjockey/<wbr />breakpoint-system</code> ensures your user's magnification experience is consistent and continuous with your pixel-based design, without layout jank or overflow, automatically.
+          </p><br />
+        </aside>
+      </section>
+
+      <article id="main-max-and-aspect-ratio">
+        <h3>Constraints for design: max-width and aspect-ratio</h3>
+        <p>Four input variables along the main query axis and a cross axis, <code>--bpu-main-max</code>, <code>--bpu-aspect-ratio</code>, <code>--bpu-cross-basis</code>, and <code>--bpu-main-shrink-to</code> define the available constraints you might design under. They are listed here <em>in the order you will generally introduce them into your designs</em>. They all work together to limit bpu values without compromising accessibility and help you deliver your designs.</p>
+        <aside class="aside-callout">
+          <p>None of the bpu values, caps, or ratios change or alter the query state or breakpoints.</p>
+          <p>That means they are capable of being defined <em>per-breakpoint</em> on the same breakpoint-system element as needed.</p>
+          <code class="code-block">
+            --bpu-aspect-ratio: calc(
+              var(--qlt-md) * (16 / 9) +
+              var(--qin-md) * (4 / 3) +
+              var(--qgte-lg) * (5 / 7)
+            );
+          </code>
+          <p>
+            (query less than medium breakpoint?) then(*)<br />
+            16 / 9 else(+)<br />
+            (query in medium breakpoint's range?) then(*)<br />
+            4 / 3 else(+)<br />
+            (query greater than or equal to large bp?) then(*)<br />
+            5 / 7
+          </p>
+        </aside>
+        <details class="docs-blade" id="docs-bpu-constraints">
+          <summary><h4>Constraining Breakpoint Units</h4></summary>
+          <div>
+            <p>No matter what breakpoint you're designing for, you may want your design to stop scaling before the next breakpoint along your main axis (e.g. max-width along viewport width).</p>
+            <p>Like the breakpoint values, <code>--bpu-main-max</code> accepts a <code>&lt;number&gt;</code> of pixels that tells the bpu values to stop expanding for this stage or node even if the axis (computed <code>--bp-query-on</code> value) has more room. You design with pixels, define the max length (typically width) as numeric pixels, and the entire bpu system stops fluidly growing at that point in harmony without developers needing to cap each css property themselves. The default value is <code>0</code>, which turns the feature off.</p>
+            <aside class="aside-callout">
+              <p>For accessibility, <code>--bpu-main-max</code> is magnified proportionately to the user's system font-size adjustment as well.</p>
+            </aside>
+            <p id="bpu-main-result">
+              This cap also produces a <code>&lt;length&gt;</code> variable, <code>var(--bpu-main-result)</code>. You can use it to set the width of the element itself, or you may be using <code>display: contents;</code>, doing something else specific, not even need the current capped width, or wanting to modify child elements.
+            </p>
+            <p>
+              <code>var(--bpu-main-result-n)</code> holds the equivalent pixel value as a <code>&lt;number&gt;</code> should you need it.
+            </p>
+            <aside class="aside-callout">
+              <p><code>--bpu-main-max</code> can be used independent of an aspect ratio and is not required for aspect ratio.</p>
+            </aside>
+            <h5 id="bpu-aspect-ratio">Maximizing aspect-ratio'd designs within your container.</h5>
+            <p>
+              Native CSS cannot do this without you jumping through trig and calc() hoops, so we've hidden the math and expanded the options using this family of 4 variables.
+            </p>
+            <p><code>--bpu-aspect-ratio</code> accepts an aspect ratio such as <code>16 / 9</code> or <code>4 / 3</code>. The default value is <code>0</code>, which turns the feature off.</p>
+            <p id="bpu-cross-result">
+              When specified, <code>var(--bpu-cross-result)</code> holds the <code>&lt;length&gt;</code> of your cross axis - calculated from the current <code>--bpu-main-result-n</code> value. Use it to set the height - or anything else you need to do, and your design has filled the available space without overflowing or breaking your aspect ratio.
+            </p>
+            <p>
+              <code>var(--bpu-cross-result-n)</code> holds the equivalent pixel value as a <code>&lt;number&gt;</code> should you need it.
+            </p>
+            <h6 id="bpu-cross-basis">Aspect Ratio's Cross Basis</h6>
+            <p>
+              The computed value of <code>--bp-query-on</code> is the basis length for the main axis <code>var(--bpu-main-result)</code>.
+            </p>
+            <p>
+              The computed value of the length you specify for <code>--bpu-cross-basis</code> (defaulting to 100cqh (which is often 100vh)) also caps <code>var(--bpu-main-result)</code> assuming <code>--bpu-aspect-ratio</code> is specified.
+            </p>
+            <p>
+              A 16 / 9 design on a phone in landscape mode will most likely be a very small thumbnail instead of taking the full width because the available height has been eaten by system UI. In this scenario, <code>var(--bpu-cross-result)</code> would often be equal to the cross basis length (typically equal to <code>100vh</code>).
+            </p>
+            <h6 id="bpu-main-shrink-to">Growing beyond the cross basis</h6>
+            <p>
+              Specifically to prevent the cross basis from shrinking <code>--bpu-main-result</code> too far from the main basis, designers using an aspect ratio can also specify <code>--bpu-main-shrink-to</code> with a <code>&lt;number&gt;</code> equal to the design's minimum pixel value just like <code>--bpu-main-max</code> is the maximum.
+            </p>
+            <p>
+              <code>--bpu-main-shrink-to</code> does not grow <code>var(--bpu-main-result)</code> past the main (query-on) basis. It only prevents the cross-basis from shrinking the main axis too far and consequently pushes the cross axis beyond its basis. So the 16 / 9 design on your phone in landscape mode becomes taller than the screen and fills more of the available width. The default value is <em>the current lower-bound breakpoint</em> so it doesn't shrink your bpu values (including typography) below the target design. Setting it to <code>0</code> effectively turns the feature off.
+            </p>
+            <aside class="aside-callout">
+              <p>For the same accessibility artwork underlying the rest of breakpoint-system, <code>--bpu-main-shrink-to</code> is also magnified proportionately to the user's system font-size adjustment.</p>
+              <p>These value magnifications are necessary for consistency, accessibility, and to eliminate layout overflows under magnified UX.</p>
+            </aside>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-aspect-ratio">
+          <summary><h4>Tests</h4></summary>
+          <div><p>TODO</p></div>
+        </details>
+      </article>
+
+      <style>
+        #bpu-constraints-tutorial {
+          .emulated-stage-viewport {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            container-type: size;
+          }
+          .right-panel {
+            padding-top: var(--bpu-8px);
+            display: grid;
+            grid-template-areas: "a a" "b b" "c d" "e f" "g h" "i j" "k l" "m m";
+            gap: var(--bpu-8px);
+            grid-template-columns: 15fr 11fr;
+            > :nth-child(1) { grid-area: a; }
+            > :nth-child(2) { grid-area: b; }
+            > :nth-child(3) { grid-area: c; }
+            > :nth-child(4) { grid-area: d; }
+            > :nth-child(5) { grid-area: e; }
+            > :nth-child(6) { grid-area: f; }
+            > :nth-child(7) { grid-area: g; }
+            > :nth-child(8) { grid-area: h; }
+            > :nth-child(9) { grid-area: i; }
+            > :nth-child(10) { grid-area: j; }
+            > :nth-child(11) { grid-area: k; }
+            > :nth-child(12) { grid-area: l; }
+            > :nth-child(13) { grid-area: m; }
+            .code-block {
+              margin: 0px;
+            }
+          }
+
+          .tut-main {
+            height: var(--bpu-cross-result);
+            outline: var(--bpu-2px) solid #8100F0;
+            outline-offset: calc(-1 * var(--bpu-2px));
+            font-size: var(--bpu-sm);
+            position: relative;
+            overflow: auto;
+            margin: auto;
+            background: #8100F088;
+          }
+
+          .constrainable {
+            margin: auto;
+            font-size: var(--bpu-xxl);
+            padding: var(--bpu-24px);
+            background: repeating-linear-gradient(-45deg, #FF00C733 0px var(--bpu-6px), #FF00C7 0 var(--bpu-12px));
+            width: var(--bpu-main-result);
+            outline: var(--bpu-8px) solid #FF00C7;
+            outline-offset: calc(-1 * var(--bpu-8px));
+          }
+        }
+      </style>
+
+      <script>
+        const updateConstraints = (inputEl, setWith) => {
+          const codePool = inputEl.closest(".code-pool")
+          const stage = codePool.querySelector(".emulated-stage")
+          const constrainable = codePool.querySelector(".constrainable")
+          const remEl = codePool.querySelector("input[type='checkbox']")
+          stage.style.setProperty("--bp-emulate-rem", (setWith ? setWith.checked : remEl.checked) ? 20 : 16)
+          const vpEl = codePool.querySelector("input[type='range']")
+          stage.style.setProperty("--bp-emulate", (setWith ? setWith.vp : vpEl.value))
+          const stageComputedStyle = getComputedStyle(stage)
+          const emulatationScalar = parseFloat(stageComputedStyle.getPropertyValue("--_bp-author-scalar")) *
+            parseFloat(stageComputedStyle.getPropertyValue("--_bp-inherited-author-scalar"))
+          console.log({emulatationScalar})
+
+          codePool.querySelector(".watch-bpu-main-max samp").innerHTML = setWith?.mm || "0"
+          constrainable.style.setProperty("--bpu-main-max", setWith?.mm)
+
+          if (setWith?.shrinkTo) constrainable.style.setProperty("--bpu-main-shrink-to", setWith?.shrinkTo)
+          else constrainable.style.removeProperty("--bpu-main-shrink-to")
+
+          if (setWith?.ar) constrainable.style.setProperty("--bpu-aspect-ratio", setWith?.ar)
+          else constrainable.style.removeProperty("--bpu-aspect-ratio")
+
+          if (setWith?.ar) constrainable.style.height = "var(--bpu-cross-result)"
+          else constrainable.style.height = "auto"
+
+          const constrainableComputedStyle = getComputedStyle(constrainable)
+
+          const computedLBEl = codePool.querySelector(".watch-lower-bound samp")
+          computedLBEl.innerHTML = parseFloat(
+            constrainableComputedStyle.getPropertyValue("--_bp-q-lower-bound")
+          ).toFixed(2) + "px"
+
+          const computedVpEl = codePool.querySelector(".watch-bp-query-on samp")
+          computedVpEl.innerHTML = (parseFloat(
+            constrainableComputedStyle.getPropertyValue("--bp-query-on")
+          ) / emulatationScalar).toFixed(2) + "px emulated"
+
+          const computedBPU16pxEl = codePool.querySelector(".watch-bpu-16px samp")
+          computedBPU16pxEl.innerHTML = (parseFloat(
+            constrainableComputedStyle.getPropertyValue("--bpu-16px")
+          ) / emulatationScalar).toFixed(2) + "px"
+
+          const computedBPUSMEl = codePool.querySelector(".watch-bpu-sm samp")
+          computedBPUSMEl.innerHTML = (parseFloat(
+            constrainableComputedStyle.getPropertyValue("--bpu-sm")
+          ) / emulatationScalar).toFixed(2) + "px"
+
+          codePool.querySelectorAll(".watch-var").forEach(wv => {
+            wv.style.opacity = 0.75
+            wv.style.outline = "none"
+            setWith?.highlight.forEach(hl => {
+              if (wv.classList.contains(hl)) {
+                wv.style.opacity = 1
+                wv.style.outline = "var(--bpu-2px) solid #FF00C7"
+              }
+            })
+          })
+
+          codePool.querySelector(".watch-bpu-main-shrink-to samp").innerHTML = (parseInt(
+            constrainableComputedStyle.getPropertyValue("--bpu-main-shrink-to")
+          ))
+          codePool.querySelector(".watch-bpu-aspect-ratio samp").innerHTML = ((
+            constrainableComputedStyle.getPropertyValue("--bpu-aspect-ratio")
+          ))
+
+          codePool.querySelector(".watch-bpu-main-result samp").innerHTML = (parseFloat(
+            constrainableComputedStyle.getPropertyValue("--bpu-main-result")
+          ) / emulatationScalar).toFixed(2) + "px"
+
+          codePool.querySelector(".watch-bpu-cross-result samp").innerHTML = (parseFloat(
+            constrainableComputedStyle.getPropertyValue("--bpu-cross-result")
+          ) / emulatationScalar).toFixed(2) + "px"
+
+          codePool.querySelector(".watch-bpu-cross-basis samp").innerHTML = (parseFloat(
+            constrainableComputedStyle.getPropertyValue("--bpu-cross-basis")
+          ) / emulatationScalar).toFixed(2) + "px"
+        }
+      </script>
+      <section id="bpu-constraints-tutorial">
+        <h3>Walkthrough of bpu values as we apply constraints to the design.</h3>
+        <div class="code-pool">
+          <div class="right-panel">
+            <div class="tutorial-slot">
+              <script>
+                createTutorial([
+                  { checked: false, vp: 1024, highlight: [], mm: 0, html: "This is a 16 / 9 emulation of a 1024px wide viewport with <code>container-type: size;</code> running on actual breakpoint-system CSS and reporting the browser's computed values. Click next to continue." },
+                  { checked: false, vp: 1024, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-16px", "watch-bpu-sm"], mm: 0, html: "Inside is a breakpoint-system element using <code>bp-node</code> defaults with padding but no other constraints on the design. Like any other div by default, it fills the full width and takes its min-content height." },
+                  { checked: false, vp: 1024, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-16px", "watch-bpu-sm"], mm: 970, html: `We apply <code>--bpu-main-max: 970;</code> to align it with the biggest <code>bp-node</code> breakpoint and add auto margins. Additionally, we use the main axis result for its width <code>width: var(--bpu-main-result);</code>. The bpu values shrink proportionately so font size, padding, etc are scaled back to not overflow the new design constraints. A slight margin appears on both sides.` },
+                  { checked: false, vp: 1024, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-16px", "watch-bpu-sm", "watch-bpu-main-shrink-to"], mm: 900, html: `It's important to note that if your max is less than the breakpoint, (we've lowered the max to 900 here) you must override <code>--bpu-main-shrink-to</code> to allow this behavior. At the moment, nothing changed visually. Designing at the current breakpoint with pixels and then capping at a width below the design would shrink everything, even the typography breakpoint units. Typically you would create this capped design at the previous breakpoint instead so it <em>grows</em> into the max.` },
+                  { checked: false, vp: 1024, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-16px", "watch-bpu-sm", "watch-bpu-main-shrink-to"], mm: 900, shrinkTo: 100, html: `For example, now we've set <code>--bpu-main-shrink-to</code> to a much lower value than the breakpoint and the bpu units have all shrunk to our 900 max (which is lower than the 970 breakpoint). This should typically be avoided outside of intentional artwork or deliberately using only very large font sizes that would accomodate anyone even if it shrank. The element width decreased to 900, margins increased, and the bpu base values dropped below 16px to about 14.9px.` },
+                  { checked: false, vp: 1024, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-16px", "watch-bpu-sm"], mm: 970, html: `We're back to <code>--bpu-main-max: 970;</code> and we'll turn on the 20px user system font-size emulation next just once to show it still behaving as expected.` },
+                  { checked: true, vp: 1024, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-16px", "watch-bpu-sm"], mm: 970, html: `Briefly turning on a 20px user system font-size setting kicks the design back to the previous <code>bp-node</code> breakpoint, magnified so the 16px bpu that was capped is now rendering at least 20px. It also sends us back up to the max 1024px viewport width because, internally, the main-max setting scaled beyond 1024, proportionate to the user's accessibility setting (if not opted out). See the <a href="#bpu-breakpoint-accessibility-tutorial">BPU Walkthrough</a> for more information on bpu accessibility.` },
+                  { checked: false, vp: 1024, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-aspect-ratio", "watch-bpu-cross-result"], mm: 0, ar: "5 / 7", html: `Setting <code>--bpu-main-max: 0;</code> to disable it, back to the default 16px root font size, and now we've got a tall 5 / 7 <code>--bpu-aspect-ratio</code> set and we set our height to <code>var(--bpu-cross-result)</code>. The main axis shrank as far as it could (back to the breakpoint at 970) attempting to not make the cross-basis grow.` },
+                  { checked: false, vp: 2600, highlight: ["watch-bpu-main-result", "watch-bpu-aspect-ratio", "watch-bpu-cross-result"], mm: 0, ar: "5 / 7", html: `The same aspect-ratio in a 2600 viewport grows about 75px beyond our previous 970 max and perfectly stops to fit inside the viewport. The original design was 970px wide, starting at our largest component-level breakpoint. This setup (with landscape aspect ratios) is likely to be common in page heros - starting with a design at a smaller breakpoint, no max, and allowing it to grow to fill the screen height without overflowing the width nor the height. The margins are wide, the elment is full height, and the viewport doesn't scroll.` },
+                  { checked: false, vp: 2600, highlight: ["watch-bpu-main-max", "watch-bpu-main-result", "watch-bpu-aspect-ratio", "watch-bpu-cross-result"], mm: 1000, ar: "5 / 7", html: `Adding main-max back into the mix at 1000 causes the cross axis to not reach the full height.<br /> When you become familiar with the relief of designing in pixels <em>without consequences</em>, knowing the developers only have to implement with the exact bpu equivalent, the friction lifts, your art makes it to production, and your users experience what you intended. Even the numbers will become invisible in short time; There's no magic in their values, it's 1:1 with your designs and your designs are built on intentional patterns.` },
+                  { checked: false, vp: 1024, highlight: ["watch-bpu-main-shrink-to", "watch-bpu-main-result", "watch-bpu-aspect-ratio", "watch-bpu-cross-result"], mm: 1000, shrinkTo: 100, ar: "5 / 7", html: `Returning to 1024 viewport width and setting <code>--bpu-main-shrink-to: 100;</code> again produces a similar perfect-fit result. The concern is our 970 piexel wide design shrank to less than half the width. With sufficiently large font sizes used within, this may be safe to do, but to be certain, you would instead design at smaller breakpoints and allow it to grow. (and set --bp-fluidity to omit the unused larger breakpoints we're growing beyond.)` },
+                ], {
+                  after: (step) => {
+                    setTimeout(() => updateConstraints(
+                      document.querySelector("#bpu-constraints-tutorial input"),
+                      step
+                    ), 50) // I know my sins.
+                  }
+                })
+              </script>
+            </div>
+            <div style="display: none;">
+              <label>
+                <span>Emulate User Root em = 20px</span>
+                <input type="checkbox" onChange="updateConstraints(this)" />
+              </label>
+              <label>
+                <span>Emulate screensize:</span>
+                <input type="range" min="320" max="2500" step="1" value="1200" onInput="updateConstraints(this)" />
+              </label>
+            </div>
+            <code class="code-block watch-var watch-bp-query-on">
+              --bp-query-on: <var>100cqw</var>;
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-16px">
+              var(--bpu-16px)
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-lower-bound">
+              Current breakpoint
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-sm">
+              var(--bpu-sm)
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-main-max">
+              --bpu-main-max:
+              <samp class="no-parens">0</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-aspect-ratio">
+              --bpu-aspect-ratio:
+              <samp class="no-parens">0</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-main-shrink-to">
+              --bpu-main-shrink-to:
+              <samp class="no-parens">0</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-cross-basis">
+              --bpu-cross-basis: <var>100cqh</var>;
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-main-result">
+              var(--bpu-main-result)
+              <samp>px</samp>
+            </code>
+            <code class="code-block watch-var watch-bpu-cross-result">
+              var(--bpu-cross-result)
+              <samp>px</samp>
+            </code>
+            <div class="emulated-stage-viewport">
+              <div class="bp-stage emulated-stage" style="--bp-emulate: 1200; --bp-emulate-rem: 16;" aria-hidden="true">
+                <div class="tut-main">
+                  <div class="bp-node constrainable">breakpoint-system</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <script>
+          updateConstraints(document.querySelector("#bpu-constraints-tutorial input"))
+        </script>
+      </section>
+
+      <article id="fluidity">
+        <h3>Fluidity drives configuration reuse, informs bpu scaling behavior, and acts as inline documentation.</h3>
+        <p>
+          Your stage and node configurations provide project-wide consistency if you aren't using one-offs, but not every layout or component requires a unique design at each of their respective breakpoints. The <code>--bp-fluidity</code> property documents which breakpoints an element is designed for, resetting bpu values from their continuous scaling back to their baseline only at each one included.
+        </p>
+        <details class="docs-blade" id="docs-fluidity">
+          <summary><h4>Fluidity Documentation</h4></summary>
+          <div>
+            <p>Your stage and node breakpoint configurations include aliasing a "fluid" property for each breakpoint. Our stage and node defaults are the following:</p>
+            <code class="code-block">
+              /* Default fluid aliases for stages */
+              --fluid-xxs: var(--bp-fluid-0);
+              --fluid-xs: var(--bp-fluid-1);
+              --fluid-sm: var(--bp-fluid-2);
+              --fluid-md: var(--bp-fluid-3);
+              --fluid-lg: var(--bp-fluid-4);
+              --fluid-xl: var(--bp-fluid-5);
+              --fluid-xxl: var(--bp-fluid-6);
+
+              /* Default fluid aliases for nodes */
+              --fluid-coin: var(--bp-fluid-0);
+              --fluid-sm-note: var(--bp-fluid-1);
+              --fluid-sm-card: var(--bp-fluid-2);
+              --fluid-sm-page: var(--bp-fluid-3);
+              --fluid-md-note: var(--bp-fluid-4);
+              --fluid-md-card: var(--bp-fluid-5);
+              --fluid-md-page: var(--bp-fluid-6);
+              --fluid-lg-note: var(--bp-fluid-7);
+              --fluid-lg-card: var(--bp-fluid-8);
+              --fluid-lg-page: var(--bp-fluid-9);
+            </code>
+            <p>You design with pixels with each artboard/canvas/frame set to the same size as your breakpoints. You may not always have a design for each breakpoint - especialy with nodes (components).</p>
+            <p>When you've settled on a set of designs for a specific stage or node, handoff to the developer the corresponding list of named breakpoints you're delivering.</p>
+            <p>Developers will use a <code>breakpoint-system</code> element at the root of the new layout/component (by adding one of our 3 class names to it) and on this element, specify <code>--bp-fluidity</code> using the corresponding fluid alias for those breakpoint names the designer deliverd.</p>
+            <code class="code-block">
+              &lt;div class="bp-stage
+                promotion-page-layout"&gt;
+
+              .promotion-page-layout {
+                --bp-fluidity: var(--fluid-xxs)
+                  var(--fluid-sm)
+                  var(--fluid-lg);
+              }
+
+              &lt;div class="bp-node
+                user-status-component"&gt;
+
+              .user-status-component {
+                --bp-fluidity: var(--fluid-coin)
+                  var(--fluid-sm-note)
+                  var(--fluid-sm-card);
+              }
+
+              &lt;div class="
+                breakpoint-system
+                our-company-wide-stage-breakpoints
+                starship-command-dashboard
+              "&gt;
+
+              .starship-command-dashboard {
+                --bp-fluidity: var(--fl-wrist-module)
+                  var(--fl-heads-up-display)
+                  var(--fl-crew-deck-monitor);
+              }
+            </code>
+            <aside class="aside-callout">
+              <p>Both developers and designers should keep in mind, <strong>only for your smallest design</strong>, if it contains text and you use our customizable typography bpu values (<code>--bpu-sm</code> etc) for the font-size, you should always allow that text to wrap, break-word, and expand vertically in case the user has a larger system font-size specified.</p>
+            </aside>
+            <p><code>--bp-fluidity</code> documents what designs are specified. For any breakpoints omitted, the bpu values will not reset to their baseline size at those locations and will instead continue expanding until the next included breakpoint is reached.</p>
+            <p>The collection of queries for omitted breakpoints will always return 0. The only behavior change for queries of included breakpoints is: <code>--qin-*</code> is aware that if your viewport is in medium range but medium is omitted, you are "in" the small range instead, which expands all the way to just before "lg" if large is included.</p>
+            <p>The default <code>--bp-fluidity</code> value is <code>var(--bp-fluid-all)</code> which contains all breakpoints not set in configuration to 0.</p>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-fluidity">
+          <summary><h4>Tests</h4></summary>
+          <div><p>TODO</p></div>
+        </details>
+      </article>
+
+      <article id="nesting">
+        <h3>breakpoint-system elements are nestable, stackable, and individually configurable.</h3>
+        <p>
+          Query against any length with any breakpoints - view width or height, element width or height, scroll position breakpoints, arbitrary progress-based lengths, mins and maxes and any combo calc() of the previous. Anything. Alias what you need later and inherit it all further down the dom - and even into the shadows if you wish.
+        </p>
+        <details class="docs-blade" id="docs-nesting">
+          <summary><h4>Nesting Documentation</h4></summary>
+          <div>
+            <p>Changing <code>--bp-query-on</code> to a height-based value like <code>100vh</code> sets up your breakpoints to respond to that axis. Configure your own breakpoint positions, and alias the queries specifically for height. Nested directly inside of that, use our default <code>bp-stage</code> breakpoints against width. Assuming your aliases don't overlap, you can now set properties for any nested dom elements using either <strong>or both</strong> your height based breakpoint queries and your width based breakpoint queries.</p>
+            <p>You aren't limited to one instance of a set. If your full stage layout has multiple sibling sections, each one could have its own stage layout. It's not uncommon for the page header to be handled as a stage rather than a node when it spans the whole screen on all designs, for example. And of course, like stage, components using node breakpoints can be nested, stacked, or placed anywhere.</p>
+            <aside class="aside-callout">
+              <p>For 91% user reach supporting nested CSS selectors, the maximum nesting depth of breakpoint-system elements is 8 - not counting other dom elements in between.* For 74% user reach supporting <em>reliable</em> <code>@container style()</code>, there is no maximum nesting depth. (percentages as of April 2026)</p>
+              <p>* Technically the only <em>documented</em> feature that has this limit is <code>--bp-emulate</code>. Keep it in mind as we listen to feedback following release.</p>
+            </aside>
+            <p>If a parent breakpoint-system element needs to use its bpu values to set properties on descendant breakpoint-system elements, the values should be var'd on the parent, otherwise they would compute using the bpu values of the child if set directly.</p>
+            <code class="code-block">
+              &lt;article class="bp-stage article-layout"&gt;
+                &lt;div class="bp-node author-details"&gt;
+
+              .article-layout {
+                --content-margins: calc(
+                  var(--qlt-md) * var(--bpu-8px) +
+                  var(--qgte-md) * var(--bpu-16px)
+                );
+
+                .author-details {
+                  margin: var(--content-margins);
+                }
+              }
+            </code>
+            <p>Rather than prepping layout-controlled properties like margin, gaps, and sometimes width on every individual stage layout, a full design system using <code>breakpoint-system</code> as a foundation would most likely already set up these tokenized values as a direct extention of the <code>.bp-stage</code> class itself (or directly on the class used for configuring their own custom stage breakpoints). That way <code>var(--content-margins)</code> would be available on all nodes nested in any stage, using the stage bpu values.</p>
+            <aside class="aside-callout">
+              <p><em>Why?</em> If a node skips a breakpoint, you want its bpu based padding to continuously expand with the rest of its design - bpu comes from the node itself. If the parent stage layout did not skip that same breakpoint, you want to make sure the correct margins are being applied for the new stage layout using the stage bpu (which would be smaller at that moment). Both CSS properties are set on the same element but are owned by different contexts. (padding is a component-level CSS property rather than one, like margin, managed by the parent layout. That is, a layout doesn't know if the design of a component needs padding and the design of a component doesn't know if it needs margins in the context of its parent layout.)</p>
+            </aside>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-nesting">
+          <summary><h4>Tests</h4></summary>
+          <div><p>TODO</p></div>
+        </details>
+      </article>
+    </section>
+
+    <style>
+      #deliver-your-designs {
+        --bp-fluidity: var(--fluid-xxs) var(--fluid-xxl);
+        font-size: var(--bpu-xxxl);
+        background: #ff00c7;
+        color: white;
+        padding-block: var(--bpu-24px);
+        margin-bottom: var(--bpu-48px);
+        margin-inline: calc(-1 * var(--bpu-6px));
+        text-align: center;
+      }
+      .image-frame {
+        width: 100%;
+        display: grid;
+        padding: var(--bpu-8px);
+        background: linear-gradient(to top, #8100f0 30%, #ff00c7 70%);
+        border-radius: var(--bpu-5px);
+        margin-block: var(--bpu-16px);
+        max-width: 600px;
+        margin-inline: auto;
+
+        img {
+          width: 100%;
+        }
+      }
+    </style>
+    <section id="even-more">
+      <h2 id="deliver-your-designs">
+        Deliver Your Designs.
+      </h2>
+
+      <article id="emulation">
+        <h3>Emulation for your marketing, documentation, and style guides</h3>
+        <p>
+          Specify a target size and any <code>breakpoint-system</code> element will scale its bpu and breakpoints down to render the entire element inside its constraints as if it were at the specified size.
+        </p>
+        <div class="image-frame"><img alt="picture of a snow globe with a miniature Eiffel Tower inside" src="./assets/icanteleport.png" /></div>
+        <details class="docs-blade" id="docs-emulation">
+          <summary><h4>Emulation Docs</h4></summary>
+          <div>
+            <p><code>--bp-emulate</code> accepts a number representing the pixel width of the viewport size you want to render this element at. It renders at that size and scales down to fit into the actual space it has available (as defined by <code>--bp-query-on</code>). User system font size adjustments <strong>DO NOT</strong> apply within an emulated element projection.</p>
+            <aside class="aside-callout">
+              <p>
+                You should almost certainly use <code>aria-hidden="true"</code> on emulated elements. It is essentially casting the content into decoration and almost exclusively makes the text very tiny.
+              </p>
+              <p>If your element is truely art-based and you intend to demonstrate specific responsive designs with emulation, you can give it an "img" role.</p>
+              <code class="code-block" style="font-size: calc(var(--qlt-xs) * var(--bpu-xxs) + var(--qgte-xs) * var(--bpu-xs));">
+                &lt;div
+                  role="img"
+                  aria-label="Cyberpunk TCG: Sasha Yakovleva"
+                  class="
+                    breakpoint-system
+                    tcg-animated-card-breakpoints
+                    iconic-rare
+                    sasha-yakovleva
+                  "
+                  style="
+                    --bpu-aspect-ratio: calc(
+                      var(--query-in-hand) * (5 / 7) +
+                      var(--query-in-play) * (16 / 9)
+                    );
+                    --bp-emulate: 1440;
+                  "
+                &gt;
+                  ...
+                &lt;/div&gt;
+              </code>
+            </aside>
+            <p>
+              If the <code>--bp-emulate</code> number you provide is less than 10, it will instead index your list of breakpoints and emulate at the corresponding size. If emulation is a feature you use often, in your config or as an extention of .bp-stage or .bp-node, you could alias the indexes in vars named after your breakpoints themselves and use those vars here: <code>--sm: 2;</code> then <code>--bp-emulate: var(--sm);</code>
+            </p>
+            <p>
+              It is possible, with only a few lines of code, to provide buttons that allow your user to flip your site to the previous breakpoint(s), magnified to fit their screen, using this feature.
+            </p>
+            <p>The default, disabled value for <code>--bp-emulate</code> is -1.</p>
+            <p id="bp-emulate-rem">Additionally, <code>--bp-emulate-rem</code> takes a number representing the pixel size of the user system font-size (e.g. <code>20</code>) if you also want to also emulate that behavior <em>only while using --bp-emulate</em>. Useful if you'd like to document or test the behavior of your breakpoint designs, especially the smallest one.</p>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-emulation">
+          <summary><h4>Tests</h4></summary>
+          <div><p>TODO</p></div>
+        </details>
+      </article>
+
+      <article id="concepts">
+        <h3>Concepts, <!-- additional features, --> cheatsheet, and more!</h3>
+        <p>
+          These are the variable namespaces <code>@propjockey/breakpoint-system</code> steps on.
+        </p>
+        <code class="code-block">
+          --bp-.+ // config and basic use
+          --bpu-.+ // Breakpoint Unit features <!-- --ibpu-.+ -->
+          --_bp-.+ // internal use only
+
+          // Default query alias namespaces
+          // only if you use .bp-stage for our default full-frame breakpoints:
+          --qgte-(xxs|xs|sm|md|lg|xl|xxl)
+          --qlt-(xxs|xs|sm|md|lg|xl|xxl)
+          --qin-(xxs|xs|sm|md|lg|xl|xxl)
+          --fluid-(xxs|xs|sm|md|lg|xl|xxl)
+
+          // only if you use .bp-node for our default component breakpoints:
+          --qgte-(sm|md|lg)-(note|card|page)
+          --qlt-(sm|md|lg)-(note|card|page)
+          --qin-(sm|md|lg)-(note|card|page)
+          --fluid-(sm|md|lg)-(note|card|page)
+        </code>
+        <details class="docs-blade" id="docs-concepts">
+          <summary><h4>The core constraint</h4></summary>
+          <div>
+            <p>
+              Our core constraint is:<br />
+              <code>@propjockey/breakpoint-system</code> elements must either be told the &lt;length&gt; of the axis to query against, or they assume 100cqw by default.
+            </p>
+            <p>On :root, <strong>you won't notice the constraint</strong>; It behaves exactly like a traditional media query. However, we enthusiastically suggest placing your stage breakpoints on <code>body</code> (<code>body.bp-stage</code>) with the following CSS on <code>:root</code></p>
+            <code class="code-block">
+              :root {
+                container-type: inline-size;
+                width: 100%;
+
+                /* plus these if they're not
+                // already in your reset. */
+                box-sizing: border-box;
+                margin: 0;
+              }
+            </code>
+            <p>
+              This has the huge win of <em>excluding the user's system size of their scrollbar gutters</em> so your queries run against the actually available space no matter their accessibility settings or system defaults.
+            </p>
+            <p>With this brief one-time setup, <strong>you again won't notice the constraint</strong>.</p>
+            <p>
+              Full page width querying is the most widely expected use case for <code>@propjockey/breakpoint-system</code> and our restrictive axiom is effectively invisible.
+            </p>
+            <p>We also champion compnent level breakpoints though and the native CSS (CaveatSandStorm) logic begins to branch if you can't immediately resolve the restirctive axiom.</p>
+            <p>Like :root (or body) assuming it is the same size as the full available width (100cqw/100vw),</p>
+            <dl>
+              <dt>by default, a node (component) assumes they are:</dt>
+              <dd>already inside of a container (like the viewport itself)</dd>
+              <dd>and that the container has a container-type (typically <code>inline-size</code>) supplying the value for the axis it's querying against (100cqw)</dd>
+              <dd>and that this node itself takes up 100% of that axis (like :root typically does)</dd>
+            </dl>
+            <p>If your grid or layout system already knows the <code>&lt;length&gt;</code> of the component, or you are comfortable allowing JS to provide that information to CSS, you can set <code>--bp-query-on</code> to that length without any extra dom nesting and without using CSS containers, resolving the restrictive axiom.</p>
+            <aside class="aside-callout">
+              <p>Effectively, CSS forces an extra dom element if your grid/layout system cannot provide the flexible <code>--bp-query-on</code> length directly.</p>
+              <p><strong>Where a <code>container-type</code> should be specified in modern CSS is up for debate.</strong></p>
+              <p><code>breakpoint-system</code> integrates most effortlessly with existing projects if your layouts provide CSS containers for your components to be nested in at 100% or grid-defined width. Or, often ideally, with <code>display: contents;</code> on the component root. Effectively layout-provided CSS containers are component "slots", without the component necessarily needing to know anything about its context. Container query units then work throughout the whole component.</p>
+              <p>The alternative perspective is that the root of a component is the CSS container itself and you only use <code>cq*</code> units on descendants of the component root. This means your component root cannot be display: contents and the component will most easily just nest its <code>breakpoint-system</code> element inside of that root<!-- or use auto measure -->.</p>
+            </aside>
+            <p>Layouts can also define <code>bpu</code> based widths for its "slots" and <strong>skip the container</strong> - which will be easy and common once your stack is fully invested in <code>breakpoint-system</code> since you'll simply be <em>designing everything with pixels</em>.</p>
+            <code class="code-block">
+              &lt;section class="bp-stage
+                my-profile-layout"&gt;
+                ...
+                &lt;div class="bp-node
+                  my-avatar-component"&gt;
+
+
+              .my-profile-layout {
+                --avatar-width: calc(
+                  var(--qlt-md) * var(--bpu-72px) +
+                  var(--qin-md) * var(--bpu-96px) +
+                  var(--qin-lg) * var(--bpu-96px) +
+                  var(--qgte-xl) * var(--bpu-128px)
+                );
+
+                .my-avatar-component {
+                  --bp-query-on: var(--avatar-width);
+                  /* set width however you want within the axis length */
+                }
+              }
+            </code>
+            <section style="display: none;">
+              <h5 id="auto-measure-css">Auto Measure's CaveatSandStorm</h5>
+              <p>
+                If you cannot do any of the above because the <code>breakpoint-system</code> element is not in a container and has a width set with a percentage or by an otherwise unknown <code>&lt;length&gt;</code>, you can either:<br />
+                add <code>container-type: inline-size;</code> to that element and then use <code>display: contents;</code> on the root of your breakpoint-system element nested inside of it to meet the requiremnt<br />
+                OR<br />
+                You can use our auto measure feature on your <code>breakpoint-system</code> element.
+              </p>
+              <p>The CSS-only auto measure feature measures the size of your <code>breakpoint-system</code> element and automatically sets the <code>--bp-query-on</code> property with the corresponding length (typically width). It also sets the default <code>--bpu-cross-basis</code> property with the (typically height) length if you use aspect ratio. With the following costs:</p>
+              <p>1) a ~5% hit in global user reach because it uses an effectively-finished/0-frame animation tied to a <a href="https://caniuse.com/?search=view-timeline">view-timeline</a> to measure it.</p>
+              <p>2) All responsive vars belonging to that <code>breakpoint-system</code> element are animation tainted so they cannot currently be used to trigger other animations outside of using @container style() to read the tainted value and change an animation on descendants.</p>
+              <p>3) The "result" vars from aspect ratio and max width features can't be used to set its own width or height and must only be used on children otherwise you softlock the <code>breakpoint-system</code> element to its initial size.</p>
+              <aside class="aside-callout">
+                <p>Effectively, CSS forces an extra dom element if your grid/layout system cannot provide the flexible <code>--bp-query-on</code> length directly.</p>
+              </aside>
+              <h5 id="auto-measure-docs">Using Auto Measure</h5>
+              <p>Auto measure consumes one of your element's pseudo elements (or a delegate) to make the measurement with <a href="https://caniuse.com/?search=view-timeline">view-timeline</a>. By default it assumes your main axis is the width.</p>
+              <code class="code-block">
+                --bp-auto-measure: var(--bp-am-off); /* default */
+
+                /* API options */
+                var(--bp-am-before)
+                var(--bp-am-after)
+                var(--bp-am-delegate)
+                var(--bp-am-height)
+              </code>
+              <p>Set <code>--bp-auto-measure: var(--bp-am-before);</code> to use your before pseudo element and automatically set <code>--bp-query-on</code> to the <code>&lt;length&gt;</code> width of your element.</p>
+              <p>Set <code>--bp-auto-measure: var(--bp-am-after);</code> to use your after pseudo element and automatically set <code>--bp-query-on</code> to the <code>&lt;length&gt;</code> width of your element.</p>
+              <p>Set <code>--bp-auto-measure: var(--bp-am-delegate);</code> to use an empty direct descendant of your element with the class <code>bp-measurement-delegate</code> to automatically set <code>--bp-query-on</code> to the <code>&lt;length&gt;</code> width of your element.</p>
+              <p>To flip the main axis to height instead of the default width, also include <code>var(--bp-am-height)</code> in the property value</p>
+              <code class="code-block">
+                --bp-auto-measure: var(--bp-am-before) var(--bp-am-height);
+              </code>
+              <p>⚠️ If only height is chosen, everything comes alive except the actual measuring device.</p>
+              <p>When it sets <code>--bp-query-on</code> using width, it also sets the default value for <code>--bpu-cross-basis</code> using height.</p>
+              <p>When it sets <code>--bp-query-on</code> using height, it also sets the default value for <code>--bpu-cross-basis</code> using width.</p>
+              <p>(<code>--bpu-cross-basis</code> doesn't do anything unless you're using aspect ratio.)</p>
+            </section>
+          </div>
+        </details>
+        <details class="docs-blade" id="docs-cheatsheet">
+          <summary><h4>API Reference / Cheatsheet</h4></summary>
+          <div>
+            <h5>Class names</h5>
+            <p>
+              <code>breakpoint-system</code> full library without default breakpoint config<br />
+              <code>bp-stage</code> full library with full page width (stage) default breakpoint config<br />
+              <code>bp-node</code> full library with individual component width (node) default breakpoint config
+              <!-- auto measure delegate -->
+            </p>
+            <h5>:root REM settings</h5>
+            <p>
+              <code>--bp-rem-adjusted: &lt;number&gt;;</code><br />
+              Optional | Default: 100 | Common: 62.5<br />
+              Your own definition of the root font-size percentage, provided as a number. Typically only for integrating with existing projects. Do not set your root font size for new <code>breakpoint-system</code> projects, use <code>bpu</code> instead.<br />
+              <a href="#docs-rem-config">Docs</a>
+            </p>
+            <p>
+              <code>--bp-user-em: <var>API provided var();</var></code><br />
+              Optional | Default: <code>var(--bp-bigger-scaling-opt-in)</code><br />
+              <var>var(--bp-bigger-scaling-opt-in)</var><br />
+              <var>var(--bp-full-scaling-opt-in)</var><br />
+              <var>var(--bp-scaling-opt-out)</var><br />
+              <a href="#docs-bp-user-em">Docs</a>
+            </p>
+            <h5>Defining breakpoint locations for your own preset.</h5><br>
+            <p>
+              Optional | Default: 0<br />
+              Pixel based number value of your breakpoint locations.<br />
+              <code>--bp-0-at: &lt;number&gt;;</code><br />
+              <code>--bp-1-at: &lt;number&gt;;</code><br />
+              <code>--bp-2-at: &lt;number&gt;;</code><br />
+              <code>--bp-3-at: &lt;number&gt;;</code><br />
+              <code>--bp-4-at: &lt;number&gt;;</code><br />
+              <code>--bp-5-at: &lt;number&gt;;</code><br />
+              <code>--bp-6-at: &lt;number&gt;;</code><br />
+              <code>--bp-7-at: &lt;number&gt;;</code><br />
+              <code>--bp-8-at: &lt;number&gt;;</code><br />
+              <code>--bp-9-at: &lt;number&gt;;</code><br />
+              <a href="#custom-breakpoints">Docs</a>
+            </p>
+            <h5>Built in queries you alias when making your own preset.</h5>
+            <p>
+              qgte = query greater-than or equal to the breakpoint<br />
+              qlt = query less than the breakpoint<br />
+              qin = query "in" the breakpoint's range<br />
+              <code>var(--bp-qgte-0)</code>
+              <code>var(--bp-qlt-0)</code>
+              <code>var(--bp-qin-0)</code><br />
+              <code>var(--bp-qgte-1)</code>
+              <code>var(--bp-qlt-1)</code>
+              <code>var(--bp-qin-1)</code><br />
+              <code>var(--bp-qgte-2)</code>
+              <code>var(--bp-qlt-2)</code>
+              <code>var(--bp-qin-2)</code><br />
+              <code>var(--bp-qgte-3)</code>
+              <code>var(--bp-qlt-3)</code>
+              <code>var(--bp-qin-3)</code><br />
+              <code>var(--bp-qgte-4)</code>
+              <code>var(--bp-qlt-4)</code>
+              <code>var(--bp-qin-4)</code><br />
+              <code>var(--bp-qgte-5)</code>
+              <code>var(--bp-qlt-5)</code>
+              <code>var(--bp-qin-5)</code><br />
+              <code>var(--bp-qgte-6)</code>
+              <code>var(--bp-qlt-6)</code>
+              <code>var(--bp-qin-6)</code><br />
+              <code>var(--bp-qgte-7)</code>
+              <code>var(--bp-qlt-7)</code>
+              <code>var(--bp-qin-7)</code><br />
+              <code>var(--bp-qgte-8)</code>
+              <code>var(--bp-qlt-8)</code>
+              <code>var(--bp-qin-8)</code><br />
+              <code>var(--bp-qgte-9)</code>
+              <code>var(--bp-qlt-9)</code>
+              <code>var(--bp-qin-9)</code><br />
+              <a href="#query-aliases">Docs</a>
+            </p>
+            <h5>Default --bp-fluidity values you alias when making your own preset</h5>
+            <p>
+              <code>var(--bp-fluid-0)</code>
+              <code>var(--bp-fluid-1)</code>
+              <code>var(--bp-fluid-2)</code>
+              <code>var(--bp-fluid-3)</code><br />
+              <code>var(--bp-fluid-4)</code>
+              <code>var(--bp-fluid-5)</code>
+              <code>var(--bp-fluid-6)</code><br />
+              <code>var(--bp-fluid-7)</code>
+              <code>var(--bp-fluid-8)</code>
+              <code>var(--bp-fluid-9)</code><br />
+              The aliases of these vars are used to set <code>--bp-fluidity</code> to define what breakpoints a layout or component was designed at.<br />
+              <a href="#docs-fluidity">Docs</a>
+            </p>
+            <h5>Typography scaling</h5>
+            <p>
+              <code>--bpu-typography-scalar: &lt;number&gt;;</code><br />
+              Optional | Default: 1.2 (Minor Third)<br />
+              By default, doesn't apply to xxs, xs, or sm typography sizes. Compunding step increase for the rest.<br />
+              <a href="#docs-bpu-typography">Docs</a><br /><br />
+            </p>
+            <section>
+              <h5>Default stage-level breakpoints, query aliases, fluid aliases, and typography scaling increase.</h5>
+              <code class="code-block">
+                :where(.bp-stage) {
+                  /* not a real bp, value is what effective-screensize is 16--bpu = 16 pixels? */
+                  --bp-0-at: 375; /* just over 10% of mobile phones are 360 width, < 2% are smaller than that */
+                  --qgte-xxs: var(--bp-qgte-0);
+                  --qlt-xxs: var(--bp-qlt-0);
+                  --qin-xxs: var(--bp-qin-0);
+                  --fluid-xxs: var(--bp-fluid-0);
+
+                  --bp-1-at: 480;
+                  --qgte-xs: var(--bp-qgte-1);
+                  --qlt-xs: var(--bp-qlt-1);
+                  --qin-xs: var(--bp-qin-1);
+                  --fluid-xs: var(--bp-fluid-1);
+
+                  --bp-2-at: 768;
+                  --qgte-sm: var(--bp-qgte-2);
+                  --qlt-sm: var(--bp-qlt-2);
+                  --qin-sm: var(--bp-qin-2);
+                  --fluid-sm: var(--bp-fluid-2);
+
+                  --bp-3-at: 1024;
+                  --qgte-md: var(--bp-qgte-3);
+                  --qlt-md: var(--bp-qlt-3);
+                  --qin-md: var(--bp-qin-3);
+                  --fluid-md: var(--bp-fluid-3);
+
+                  --bp-4-at: 1280;
+                  --qgte-lg: var(--bp-qgte-4);
+                  --qlt-lg: var(--bp-qlt-4);
+                  --qin-lg: var(--bp-qin-4);
+                  --fluid-lg: var(--bp-fluid-4);
+
+                  --bp-5-at: 1440;
+                  --qgte-xl: var(--bp-qgte-5);
+                  --qlt-xl: var(--bp-qlt-5);
+                  --qin-xl: var(--bp-qin-5);
+                  --fluid-xl: var(--bp-fluid-5);
+
+                  --bp-6-at: 1920;
+                  --qgte-xxl: var(--bp-qgte-6);
+                  --qlt-xxl: var(--bp-qlt-6);
+                  --qin-xxl: var(--bp-qin-6);
+                  --fluid-xxl: var(--bp-fluid-6);
+
+                  --bp-7-at: 0;
+                  --bp-8-at: 0;
+                  --bp-9-at: 0;
+
+                  /* Typography Scalars
+                  // xxs, xs: Minor Third @ 1.2
+                  // sm, md: Major Third @ 1.25
+                  // lg: Perfect Fourth @ 1.333
+                  // xl: Augmented Fourth @ 1.414
+                  // xxl: Perfect Fifth @ 1.5
+                  //
+                  // Use qin because author's --bp-fluidity might cause ranges to be 0
+                  */
+                  --bpu-typography-scalar: calc(
+                    var(--qin-xxs) * 1.2 +
+                    var(--qin-xs) * 1.2 +
+                    var(--qin-sm) * 1.25 +
+                    var(--qin-md) * 1.25 +
+                    var(--qin-lg) * 1.333 +
+                    var(--qin-xl) * 1.414 +
+                    var(--qin-xxl) * 1.5
+                  );
+                }
+              </code><br />
+              <a href="#stage-breakpoint-values">Docs</a><br /><br />
+            </section>
+            <section>
+              <h5>Default node-level breakpoints, query aliases, fluid aliases, and typography scaling increase.</h5>
+              <code class="code-block">
+                :where(.bp-node) {
+                  /* not a real bp, value is what effective-screensize is 16--bpu = 16 pixels? */
+                  --bp-0-at: 120;
+                  --qgte-coin: var(--bp-qgte-0);
+                  --qlt-coin: var(--bp-qlt-0);
+                  --qin-coin: var(--bp-qin-0);
+                  --fluid-coin: var(--bp-fluid-0);
+
+                  --bp-1-at: 160;
+                  --qgte-sm-note: var(--bp-qgte-1);
+                  --qlt-sm-note: var(--bp-qlt-1);
+                  --qin-sm-note: var(--bp-qin-1);
+                  --fluid-sm-note: var(--bp-fluid-1);
+
+                  --bp-2-at: 240;
+                  --qgte-sm-card: var(--bp-qgte-2);
+                  --qlt-sm-card: var(--bp-qlt-2);
+                  --qin-sm-card: var(--bp-qin-2);
+                  --fluid-sm-card: var(--bp-fluid-2);
+
+                  --bp-3-at: 300;
+                  --qgte-sm-page: var(--bp-qgte-3);
+                  --qlt-sm-page: var(--bp-qlt-3);
+                  --qin-sm-page: var(--bp-qin-3);
+                  --fluid-sm-page: var(--bp-fluid-3);
+
+                  --bp-4-at: 384;
+                  --qgte-md-note: var(--bp-qgte-4);
+                  --qlt-md-note: var(--bp-qlt-4);
+                  --qin-md-note: var(--bp-qin-4);
+                  --fluid-md-note: var(--bp-fluid-4);
+
+                  --bp-5-at: 468;
+                  --qgte-md-card: var(--bp-qgte-5);
+                  --qlt-md-card: var(--bp-qlt-5);
+                  --qin-md-card: var(--bp-qin-5);
+                  --fluid-md-card: var(--bp-fluid-5);
+
+                  --bp-6-at: 600;
+                  --qgte-md-page: var(--bp-qgte-6);
+                  --qlt-md-page: var(--bp-qlt-6);
+                  --qin-md-page: var(--bp-qin-6);
+                  --fluid-md-page: var(--bp-fluid-6);
+
+                  --bp-7-at: 728;
+                  --qgte-lg-note: var(--bp-qgte-7);
+                  --qlt-lg-note: var(--bp-qlt-7);
+                  --qin-lg-note: var(--bp-qin-7);
+                  --fluid-lg-note: var(--bp-fluid-7);
+
+                  --bp-8-at: 800;
+                  --qgte-lg-card: var(--bp-qgte-8);
+                  --qlt-lg-card: var(--bp-qlt-8);
+                  --qin-lg-card: var(--bp-qin-8);
+                  --fluid-lg-card: var(--bp-fluid-8);
+
+                  --bp-9-at: 970;
+                  --qgte-lg-page: var(--bp-qgte-9);
+                  --qlt-lg-page: var(--bp-qlt-9);
+                  --qin-lg-page: var(--bp-qin-9);
+                  --fluid-lg-page: var(--bp-fluid-9);
+
+                  /* if you are designing components larger than these, use stage breakpoints instead */
+                  --bpu-typography-scalar: calc(
+                    1.2 +
+                    var(--qin-lg-card) * 0.05 +
+                    var(--qin-lg-page) * 0.05
+                  );
+                }
+              </code><br />
+              <a href="#node-breakpoint-values">Docs</a><br /><br />
+            </section>
+
+            <h5>What value to query against</h5>
+            <p>
+              <code>--bp-query-on: &lt;length&gt;;</code> Default 100cqw<br />
+              A flexible length to query against. Should be "live" with the current space a layout or component (stage or node) has available to it. Should typically not be a fixed length like pixels unless it is managed with javascript.<br />
+              <a href="#query-on">Docs</a>
+            </p>
+
+            <h5>Emulation</h5>
+            <p>
+              <code>--bp-emulate: &lt;number&gt;;</code><br />
+              Optional | Default: -1 (disabled)<br />
+              Target width in pixels as a number to render the element at, shrunk to fit in its current main axis.<br />
+              <a href="#docs-emulation">Docs</a>
+            </p>
+            <p>
+              <code>--bp-emulate-rem: &lt;number&gt;;</code><br />
+              Optional | Default: 16<br />
+              Only when using <code>--bp-emulate</code> specifies a user system font size (e.g. 20) to emulate within the design.<br />
+              <a href="#bp-emulate-rem">Docs</a>
+            </p>
+
+            <h5>BPU Constraints - designing with max width and aspect ratios</h5>
+            <p>
+              <code>--bpu-main-max: &lt;number&gt;;</code><br />
+              Optional | Default: 0 (disabled)<br />
+              Pixel based number value for where this design should stop all bpu values from expanding further.<br />
+              <a href="#docs-bpu-constraints">Docs</a>
+            </p>
+            <p>
+              <code>--bpu-aspect-ratio: &lt;aspect-ratio&gt;</code><br />
+              Optional | Default: 0 (disabled)<br />
+              <code>16 / 9</code>, <code>5 / 7</code>, <code>3 / 4</code> etc<br />
+              <a href="#bpu-aspect-ratio">Docs</a>
+            </p>
+            <p>
+              <code>--bpu-main-shrink-to: &lt;number&gt;;</code><br />
+              Optional | Default: The current lower bound breakpoint position.<br />
+              Pixel based number value for where this design should stop shrinking bpu values if currently constrained by the cross-axis' basis. Set it to 0 to effectively disable the feature.<br />
+              <a href="#bpu-main-shrink-to">Docs</a>
+            </p>
+            <p>
+              <code>--bpu-cross-basis: &lt;length&gt;;</code><br />
+              Optional | Default: 100cqh<br />
+              Similar to <code>--bp-query-on</code>, defines the flexible length the cross-axis has available. Only has an effect while using <code>--bpu-aspect-ratio</code>. Grows if it compromises <code>--bpu-main-shrink-to</code>.<br />
+              <a href="#bpu-cross-basis">Docs</a>
+            </p>
+            <p>
+              <code>var(--bpu-main-result)</code> - &lt;length&gt;<br />
+              The main-axis length after <code>--bpu-main-max</code> and/or <code>--bpu-aspect-ratio</code> resolves.<br />
+              <code>var(--bpu-main-result-n)</code> - &lt;number&gt;<br />
+              The equivalent result as a number.<br />
+              <a href="#bpu-main-result">Docs</a>
+            </p>
+            <p>
+              <code>var(--bpu-cross-result)</code> - &lt;length&gt;<br />
+              The cross-axis length after <code>--bpu-aspect-ratio</code> resolves.<br />
+              <code>var(--bpu-cross-result-n)</code> - &lt;number&gt;<br />
+              The equivalent result as a number.<br />
+              <a href="#bpu-cross-result">Docs</a>
+            </p>
+
+            <section>
+              <h5>Breakpoint Units</h5>
+              <p>
+                Available in large sets with the most common lengths found across major design systems - and many more. Ready to be used as-is or aliased for a complete design system using <code>@propjockey/breakpoint-system</code> as a foundation.<br />
+                <a href="#docs-bpu">Docs</a>
+              </p>
+              <p>Scales fluidly, works with our shifting breakpoints to deliver perfect user system font-size adjustment accessibility. Design with pixels at your breakpoints, implement with bpu.</p>
+              <p>
+                Unitless &lt;number&gt; variant.
+                <code>--bpu-1</code>
+                <code>--bpu-3</code>
+                <code>--bpu-5</code>
+                <code>--bpu-15</code>
+                <code>--bpu-25</code>
+                <code>--bpu-35</code>
+                <code>--bpu-45</code>
+                <code>--bpu-2</code>
+                <code>--bpu-4</code>
+                <code>--bpu-6</code>
+                <code>--bpu-8</code>
+                <code>--bpu-10</code>
+                <code>--bpu-12</code>
+                <code>--bpu-14</code>
+                <code>--bpu-16</code>
+                <code>--bpu-18</code>
+                <code>--bpu-20</code>
+                <code>--bpu-22</code>
+                <code>--bpu-24</code>
+                <code>--bpu-26</code>
+                <code>--bpu-28</code>
+                <code>--bpu-30</code>
+                <code>--bpu-32</code>
+                <code>--bpu-34</code>
+                <code>--bpu-36</code>
+                <code>--bpu-38</code>
+                <code>--bpu-40</code>
+                <code>--bpu-42</code>
+                <code>--bpu-44</code>
+                <code>--bpu-46</code>
+                <code>--bpu-48</code>
+                <code>--bpu-50</code>
+                <code>--bpu-56</code>
+                <code>--bpu-64</code>
+                <code>--bpu-72</code>
+                <code>--bpu-80</code>
+                <code>--bpu-96</code>
+                <code>--bpu-128</code>
+                <code>--bpu-160</code>
+              </p>
+              <p>
+                Pixel &lt;length&gt; variant.
+                <code>--bpu-1px</code>
+                <code>--bpu-3px</code>
+                <code>--bpu-5px</code>
+                <code>--bpu-15px</code>
+                <code>--bpu-25px</code>
+                <code>--bpu-35px</code>
+                <code>--bpu-45px</code>
+                <code>--bpu-2px</code>
+                <code>--bpu-4px</code>
+                <code>--bpu-6px</code>
+                <code>--bpu-8px</code>
+                <code>--bpu-10px</code>
+                <code>--bpu-12px</code>
+                <code>--bpu-14px</code>
+                <code>--bpu-16px</code>
+                <code>--bpu-18px</code>
+                <code>--bpu-20px</code>
+                <code>--bpu-22px</code>
+                <code>--bpu-24px</code>
+                <code>--bpu-26px</code>
+                <code>--bpu-28px</code>
+                <code>--bpu-30px</code>
+                <code>--bpu-32px</code>
+                <code>--bpu-34px</code>
+                <code>--bpu-36px</code>
+                <code>--bpu-38px</code>
+                <code>--bpu-40px</code>
+                <code>--bpu-42px</code>
+                <code>--bpu-44px</code>
+                <code>--bpu-46px</code>
+                <code>--bpu-48px</code>
+                <code>--bpu-50px</code>
+                <code>--bpu-56px</code>
+                <code>--bpu-64px</code>
+                <code>--bpu-72px</code>
+                <code>--bpu-80px</code>
+                <code>--bpu-96px</code>
+                <code>--bpu-128px</code>
+                <code>--bpu-160px</code>
+              </p>
+            </section>
+
+            <section>
+              <h5>Typography Breakpoint Units</h5>
+              <p>
+                <code>var(--bpu-typography-basis-n)</code> - <code>&lt;number&gt;</code> - the "unit value" of the typography bpu family.<br />
+                differs from <code>var(--bpu-1)</code> only in the lowest defined breakpoint range where it won't shrink below its baseline.<br />
+                <code>var(--bpu-typography-basis)</code> - <code>&lt;length&gt;</code> equivalent of the above.<br />
+                <a href="#docs-bpu-typography">Docs</a>
+              </p>
+              <p>
+                <code>--bpu-typography-scalar: &lt;number&gt;;</code><br />
+                Optional | Default: 1.2 (Minor Third)<br />
+                By default, doesn't apply to xxs, xs, or sm typography sizes. Compunding step increase for the rest.<br />
+                Our stage and node defaults override this with a query-aware calc() switch so it slightly expands the step for larger available space.<br />
+                <a href="#docs-bpu-typography">Docs</a>
+              </p>
+              <div>
+                <div style="font-family: monospace; font-size: var(--bpu-xxs);">--bpu-xxs</div>
+                <div style="font-family: monospace; font-size: var(--bpu-xs);">--bpu-xs</div>
+                <div style="font-family: monospace; font-size: var(--bpu-sm);">--bpu-sm</div>
+                <div style="font-family: monospace; font-size: var(--bpu-md);">--bpu-md</div>
+                <div style="font-family: monospace; font-size: var(--bpu-lg);">--bpu-lg</div>
+                <div style="font-family: monospace; font-size: var(--bpu-xl);">--bpu-xl</div>
+                <div style="font-family: monospace; font-size: var(--bpu-xxl);">--bpu-xxl</div>
+                <div style="font-family: monospace; font-size: var(--bpu-xxxl);">--bpu-xxxl</div>
+              </div>
+              Available as <a href="#bpu-typography-w3c-json">W3C Design Token Format ( bpu-tokens.json )</a>
+            </section>
+          </div>
+        </details>
+        <details class="test-blade" id="tests-concepts">
+          <summary><h4>Tests</h4></summary>
+          <div><p>TODO</p></div>
+        </details>
+      </article>
+    </section>
+    <section style="margin-bottom: var(--bpu-48px);">
+      <h2 id="undocumented">There are several undocumented features.</h2>
+      <p>Any vairables not explicitly defined in the documentation are experimental, waiting for use cases, and aren't guaranteed to make it into production. Explore and please do reach out:</p>
+    </section>
+  </main>
+
+  <style>
+    footer {
+      display: grid;
+      justify-items: center;
+      padding-inline: calc(
+        var(--qlt-sm) * var(--bpu-6px) +
+        var(--qgte-sm) * var(--bpu-16px)
+      );
+      background: #1b1124;
+      color: #ffffff;
+      border-top: var(--bpu-8px) solid #8100F0;
+      border-bottom: var(--bpu-2px) solid #ff00c7;
+
+      img {
+        word-break: break-word;
+      }
+
+      #receiving-abundance, .copyright {
+        text-align: center;
+        margin-top: var(--bpu-24px);
+        font-size: var(--bpu-xxs);
+      }
+      > p {
+        font-size: var(--bpu-sm);
+        padding-bottom: var(--bpu-20px);
+      }
+      #receiving-abundance {
+        font-size: calc(
+          var(--qin-xxs) * var(--bpu-xs) +
+          var(--qgte-xs) * var(--bpu-sm)
+        );
+        font-weight: calc(
+          var(--qin-xxs) * 100 +
+          var(--qgte-xs) * 900
+        );
+      }
+      table {
+        margin-inline: auto;
+        width: calc(
+          var(--qlt-sm) * 100% +
+          var(--qgte-sm) * 550px
+        );
+        font-size: var(--bpu-sm);
+        img {
+          width: 100%;
+        }
+      }
+    }
+    @keyframes hide-mid-compat {
+      0%, 49.99% {
+        visibility: visible;
+      }
+      50%, 100% {
+        visibility: collapse;
+        width: 0px;
+        font-size: 0px;
+        display: none;
+      }
+    }
+    .abundance-table {
+      background: #ffffff;
+      color: #000000;
+      @supports (background: paint(for-chromium)) and (animation-composition: add) {
+        @container style(--qlt-sm: 1) {
+          th:nth-child(2),
+          td:nth-child(2) {
+            display: none;
+          }
+        }
+      }
+      @supports not ((background: paint(for-chromium)) and (animation-composition: add)) {
+        th:nth-child(2),
+        td:nth-child(2) {
+          animation: hide-mid-compat 2s step-end
+                  calc(var(--qlt-sm) * -1s) paused;
+        }
+      }
+      td { min-width: 170px; }
+    }
+    .social-table {
+      img { filter: brightness(0) invert(1); }
+      td { min-width: var(--bpu-72px); }
+    }
+    #open-contact {
+      margin-top: var(--bpu-16px);
+      &, & + p {
+        width: 100%;
+        max-width: 600px; /* var(--bpu-main-result); */
+        margin-inline: auto;
+      }
+    }
+
+    .scroll-table {
+      overflow-y: auto;
+      max-width: 100%;
+      width: 100%;
+      white-space: nowrap;
+    }
+  </style>
+
+  <footer>
+    <h2 id="open-contact" style="text-align: left;">Open Contact 👽</h2>
+    <p style="text-align: left;">Please do reach out if you need help with any of this, have feature requests, or want to share what you've created!</p>
+    <div class="scroll-table">
+      <table class="social-table">
+        <thead>
+          <tr>
+            <th style="text-align:center">PropJockey</th>
+            <th style="text-align:center">CodePen</th>
+            <th style="text-align:center">DEV Blog</th>
+            <th style="text-align:center">GitHub</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center">
+              <a href="https://propjockey.io"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/propjockey-lines.svg" alt="PropJockey.io"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://codepen.io/propjockey"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/codepen.svg" alt="CodePen"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://dev.to/janeori"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/dev.svg" alt="DEV Blog"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://github.com/propjockey"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/github.svg" alt="GitHub"></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="scroll-table">
+      <table class="social-table">
+        <thead>
+          <tr>
+            <th style="text-align:center">Mastodon</th>
+            <th style="text-align:center">LinkedIn</th>
+            <th style="text-align:center">X</th>
+            <th style="text-align:center">Bluesky</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center">
+              <a href="https://front-end.social/@JaneOri"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/mastodon.svg" alt="Mastodon"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://www.linkedin.com/in/janeori/"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/linkedin.svg" alt="LinkedIn"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://x.com/jane0ri"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/x.svg" alt="X"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://bsky.app/profile/janeori.propjockey.io"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/external-social/100px/color-responsive/bluesky.svg" alt="Bluesky"></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 id="receiving-abundance">
+      My heart is open to receive abundance in all forms,<br>flowing to me in many expected and unexpected ways.
+    </h3>
+    <div class="scroll-table">
+      <table class="abundance-table">
+        <thead>
+          <tr>
+            <th style="text-align:center">PayPal</th>
+            <th style="text-align:center">Ko-fi</th>
+            <th style="text-align:center">Venmo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center">
+              <a href="https://www.paypal.com/donate/?cmd=_s-xclick&amp;hosted_button_id=9Z925L3SJJ8BS&amp;source=qr&amp;ssrt=1772865628068"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/QR-Codes/svg/200px/paypal.svg" alt="PayPal"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://ko-fi.com/janeori"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/QR-Codes/svg/200px/ko-fi.svg" alt="Ko-fi"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://account.venmo.com/u/JaneOri"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/QR-Codes/svg/200px/venmo.svg" alt="Venmo"></a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="scroll-table">
+      <table class="abundance-table">
+        <thead>
+          <tr>
+            <th style="text-align:center">BTC</th>
+            <th style="text-align:center">XRP</th>
+            <th style="text-align:center">ETH</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center">
+              <a href="https://app.ens.domains/janeori.eth"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/QR-Codes/svg/200px/btc.svg" alt="BTC bc1qe2ss8hvmskcxpmk046msrjpmy9qults2yusgn9"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://bithomp.com/en/account/X7zmKiqEhMznSXgj9cirEnD5sWo3iZPqbNPChdEKV9sM9WF"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/QR-Codes/svg/200px/xrp.svg" alt="XRP rw2ciyaNshpHe7bCHo4bRWq6pqqynnWKQg : 459777128"></a>
+            </td>
+            <td style="text-align:center">
+              <a href="https://app.ens.domains/janeori.eth"><img src="https://raw.githubusercontent.com/propjockey/propjockey-brand/main/QR-Codes/svg/200px/eth.svg" alt="ETH 0x674D4191dEBf9793e743D21a4B8c4cf1cC3beF54"></a>
+            </td>
+          </tr>
+          <tr style="font-size: var(--bpu-xs);">
+            <td style="text-align:center">bc1qe...usgn9</td>
+            <td style="text-align:center">rw2ci...nWKQg
+              <br>: 459777128</td>
+            <td style="text-align:center">0x674...beF54</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="copyright">&copy; 2026 Jane Ori, PropJockey. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll("code").forEach(block => {
+      const textLines = block.textContent.split("\n")
+      const indents = textLines
+        .filter(line => line.trim().length > 0)
+        .map(line => line.match(/^[ \t]*/)[0].length)
+
+      const minIndent = Math.min(...indents)
+      const indentRegex = new RegExp(`^[ \\t]{${minIndent}}`, "gm")
+
+      block.innerHTML = block.innerHTML
+        .replace(indentRegex, "")
+        .replace(/^\s*[\r\n]/, "")
+        .replace(/[\r\n]\s*$/, "")
+    })
+
+    let isDocumentationMode = false
+    let isRouting = false // Guards against infinite toggle loops
+
+    const docBlades = document.querySelectorAll("details")
+    const expandAllTab = document.querySelector("#tab-expand-all")
+    const collapseAllTab = document.querySelector("#tab-collapse-all")
+
+    // 1. Global Sticky Tab Logic
+    const toggleAllBlades = (forceOpen) => {
+      isDocumentationMode = forceOpen
+      isRouting = true
+
+      docBlades.forEach(blade => {
+        blade.open = forceOpen
+      })
+
+      setTimeout(() => isRouting = false, 10)
+    }
+
+    if (expandAllTab && collapseAllTab) {
+      expandAllTab.addEventListener("click", () => toggleAllBlades(true))
+      collapseAllTab.addEventListener("click", () => toggleAllBlades(false))
+    }
+
+    // 2. The Core Navigation Engine
+    const openAndScrollToTarget = (hash) => {
+      if (!hash || hash === "#") return
+
+      const targetId = hash.replace("#", "")
+      const targetElement = document.getElementById(targetId)
+
+      if (targetElement) {
+        const parentDetails = targetElement.closest("details")
+        if (parentDetails) {
+          isRouting = true
+          parentDetails.open = true
+          setTimeout(() => isRouting = false, 10)
+        }
+
+        requestAnimationFrame(() => {
+          targetElement.scrollIntoView({ behavior: "smooth", block: "start" })
+        })
+      }
+    }
+
+    // 3. Handle Initial Page Load
+    window.addEventListener("DOMContentLoaded", () => {
+      if (window.location.hash) {
+        openAndScrollToTarget(window.location.hash)
+      }
+    })
+
+    // 4. Intercept Internal Link Jumps
+    document.addEventListener("click", (e) => {
+      const anchor = e.target.closest("a[href^=\"#\"]")
+
+      if (anchor) {
+        const hash = anchor.getAttribute("href")
+
+        if (hash.length > 1) {
+          e.preventDefault()
+          // PUSH the state so the back button knows where to go
+          history.pushState(null, "", hash)
+          openAndScrollToTarget(hash)
+        }
+      }
+    })
+
+    // 5. Handle the Browser Back/Forward Buttons
+    window.addEventListener("popstate", () => {
+      if (isDocumentationMode) return
+
+      isRouting = true
+
+      if (!window.location.hash) {
+        // If we backed out to the root url, close everything
+        docBlades.forEach(blade => {
+          blade.open = false
+        })
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      } else {
+        // If we backed into another hash, open it
+        openAndScrollToTarget(window.location.hash)
+      }
+
+      setTimeout(() => isRouting = false, 10)
+    })
+
+    // 6. Push State when native details arrows are clicked
+    docBlades.forEach(blade => {
+      blade.addEventListener("toggle", () => {
+        // Ignore toggles caused by our own JS routing
+        if (isDocumentationMode || isRouting) return
+
+        const id = blade.getAttribute("id")
+        if (!id) return
+
+        if (blade.open) {
+          // They manually OPENED it: log it in history
+          if (window.location.hash !== `#${id}`) {
+            history.pushState(null, "", `#${id}`)
+          }
+        } else {
+          // They manually CLOSED it: clear the hash from the URL
+          if (window.location.hash === `#${id}`) {
+            const cleanUrl = window.location.pathname + window.location.search
+            history.pushState(null, "", cleanUrl)
+          }
+        }
+      })
+    })
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+<svg class="kintsugi-overlay" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="ceramic" cx="50%" cy="0%" r="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#EBEBEB" />
+    </radialGradient>
+
+    <filter id="fracture" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="25" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+
+    <mask id="crack-mask">
+      <rect width="100%" height="100%" fill="white" />
+      <g filter="url(#fracture)" class="crack-lines">
+        <path d="M 400,-100 Q 500,300 350,500 T 500,1100" stroke="black" stroke-width="4" fill="none" />
+        <path d="M -100,400 Q 300,500 350,500 T 1100,700" stroke="black" stroke-width="3" fill="none" />
+        <path d="M 350,500 Q 600,600 700,1100" stroke="black" stroke-width="2" fill="none" />
+      </g>
+    </mask>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#ceramic)" mask="url(#crack-mask)" />
+</svg>
