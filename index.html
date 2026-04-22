@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" href="./favicon.png">
 
   <meta property="og:title" content="@propjockey/breakpoint-system - Deliver your designs." />
-  <meta property="og:description" content="Highly accessible, responsive CSS designed in pixels and implemented 1:1 with the new Breakpoint Unit for a flawless fluid experience. Custom aliases, breakpoints, and queries with heavily researched defaults. No scripts, no builds, 100% vanilla CSS. Old tech, new ideas - 91% global user reach." />
+  <meta property="og:description" content="Highly accessible, responsive CSS designed in pixels and implemented 1:1 with the new Breakpoint Unit for a flawless fluid experience. Custom aliases, breakpoints, and queries with heavily researched defaults. No scripts, no builds, 100% vanilla CSS. Old tech, new ideas - 89% global user reach." />
   <meta property="og:image" content="https://propjockey.breakpoint-system.com/assets/pjbps.png" />
   <meta property="og:url" content="https://propjockey.breakpoint-system.com/" />
   <meta property="og:type" content="website" />
@@ -21,7 +21,7 @@
     gtag('config', 'UA-146833088-2');
   </script>
   <!-- -->
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.1.0/breakpoint-system.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.1.1/breakpoint-system.css">
   <!-- -- >
     <link rel="stylesheet" type="text/css" href="../breakpoint-system/breakpoint-system.css">
   <!-- -->
@@ -638,7 +638,7 @@
       <b style="margin-block: var(--bpu-16px); display: block;">OR</b>
       <p>
         Use your favorite NPM CDN and include it on your page for small projects:<br>
-        <code class="html-block">&lt;link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.1.0/breakpoint-system.css"&gt;</code>
+        <code class="html-block">&lt;link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.1.1/breakpoint-system.css"&gt;</code>
       </p>
       <h3>The biggest accessibility problem with media queries is solved in the background.</h3>
       <p style="margin-bottom: var(--bpu-20px);">
@@ -689,15 +689,15 @@
     </article>
 
     <article id="global-user-reach">
-      <h2>91% Global User Reach</h2>
+      <h2>89% Global User Reach</h2>
       <p>
-        Hit the metal at <strong>91%</strong> reach with <code>calc()</code> only switches and animation indexing.<br />
+        Hit the metal at <strong>89%</strong> reach with <code>calc()</code> only switches and space toggles.<br />
         <br />
         Take it modern and use nested <code>@container style()</code> queries for <strong>74%</strong>.*<br />
         <br />
         Or rise to the bleeding edge with <code>if(style())</code> queries for <strong>66%</strong> global user reach.
       </p>
-      <p style="margin-top: var(--bpu-16px);">* <small><a href="https://caniuse.com/css-container-queries-style">88% according to caniuse</a>, but Safari's implementation isn't ready for production so we've subtracted their 14% and use fallbacks.</small></p>
+      <p style="margin-top: var(--bpu-16px);">* <small><a href="https://caniuse.com/css-container-queries-style">88% according to caniuse</a>, but Safari's implementation isn't ready for production so we've subtracted that 14% and use fallbacks for their impressive user reach all the way back to May 2023!</small></p>
       <details class="docs-blade" id="docs-gur" style="display: none;">
         <summary>
           <h3>
@@ -1457,7 +1457,7 @@
       <section id="space-toggles">
         <h3>Space Toggle Query Expansion (v1.1.0)</h3>
         <p style="margin-bottom: var(--bpu-16px);">
-          Opt in to add space-toggle variants for all of your query conditionals for an even better authoring experience. And no compromise on the base library's broad 91% global user reach! Full support!
+          Opt in to add space-toggle variants for all of your query conditionals for an even better authoring experience. And no compromise on the base library's broad 89% global user reach! Full support!
         </p>
         <p>
           It's not the promised land of the incredible future focused <a href="https://developer.chrome.com/blog/if-article">if(style()) API</a> but it's the next best thing <em>and probably the primary drive behind early and wide author demand of if(style())</em>!
@@ -1633,7 +1633,7 @@
             <p>(There are no performance issues to worry about - they are hard-coded as paused and only ever recompute when the entire element is already recomputing because of a size change.)</p>
             <aside class="aside-callout">
               <p>Thankfully, neither Safari nor Firefox seem to care even when a space toggle is animation tainted - setting properties that can't be animated (primarily other animations) still works.</p>
-              <p>However, 2% of that 25% using the animation fallback implementation are firefox users and the technique to avoid animation tainting does not work in firefox (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2033678">I filed a bug</a>) (and <a href="https://bugs.webkit.org/show_bug.cgi?id=312853">a related Safari bug</a> we avoided). So firefox has its own, third implementation automatically triggered with appropriate @supports clauses.</p>
+              <p>However, 1.75% of that 25% using the animation fallback implementation are firefox users and the technique to avoid animation tainting does not work in firefox (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2033678">I filed a bug</a>) (and <a href="https://bugs.webkit.org/show_bug.cgi?id=312853">a related Safari bug</a> we avoided). So firefox has its own, third implementation automatically triggered with appropriate @supports clauses.</p>
               <p>The end DX is the same across all browsers but <a href="https://github.com/propjockey/breakpoint-system/issues">please let me know</a> if you run into any edge cases.</p>
             </aside>
             <h5 id="adding-animations-while-using-space-toggles">Adding animations while opting into space toggles</h5>
@@ -1667,7 +1667,7 @@
                 var(--bp-animation-timing-function) var(--ease-spring-3);
             </code>
             <h4 id="space-toggle-usage">Example using space toggles</h4>
-            <p>While the world eagerly waits for <code>if(style())</code>, this works for our full global user reach at 91% (as of April 2026).</p>
+            <p>While the world eagerly waits for <code>if(style())</code>, this works for our full global user reach at 89% (as of April 2026).</p>
             <code class="code-block">
               .my-layout--bp-stage-st {
                 --max-content-if-xs:
@@ -2855,7 +2855,7 @@
             <p>Changing <code>--bp-query-on</code> to a height-based value like <code>100vh</code> sets up your breakpoints to respond to that axis. Configure your own breakpoint positions, and alias the queries specifically for height. Nested directly inside of that, use our default <code>bp-stage</code> breakpoints against width. Assuming your aliases don't overlap, you can now set properties for any nested dom elements using either <strong>or both</strong> your height based breakpoint queries and your width based breakpoint queries.</p>
             <p>You aren't limited to one instance of a set. If your full stage layout has multiple sibling sections, each one could have its own stage layout. It's not uncommon for the page header to be handled as a stage rather than a node when it spans the whole screen on all designs, for example. And of course, like stage, components using node breakpoints can be nested, stacked, or placed anywhere.</p>
             <aside class="aside-callout">
-              <p>For 91% user reach supporting nested CSS selectors, the maximum nesting depth of breakpoint-system elements is 8 - not counting other dom elements in between.* For 74% user reach supporting <em>reliable</em> <code>@container style()</code>, there is no maximum nesting depth. (percentages as of April 2026)</p>
+              <p>For 89% user reach supporting nested CSS selectors, the maximum nesting depth of breakpoint-system elements is 8 - not counting other dom elements in between.* For 74% user reach supporting <em>reliable</em> <code>@container style()</code>, there is no maximum nesting depth. (percentages as of April 2026)</p>
               <p>* Technically the only <em>documented</em> feature that has this limit is <code>--bp-emulate</code>. Keep it in mind as we listen to feedback following release.</p>
             </aside>
             <p>If a parent breakpoint-system element needs to use its bpu values to set properties on descendant breakpoint-system elements, the values should be var'd on the parent, otherwise they would compute using the bpu values of the child if set directly.</p>

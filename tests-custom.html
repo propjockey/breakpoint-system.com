@@ -90,8 +90,16 @@
 <button onClick="test()">run tests</button>
 </header>
 
-<style style="display: block; outline: 1px solid lime; width: 100%; min-height: 500px;" contenteditable="plaintext-only">
-  @import url("https://unpkg.com/@propjockey/breakpoint-system@1.1.0/breakpoint-system.css");
+<style style="
+  display: block;
+  outline: 1px solid lime;
+  width: 100%;
+  min-height: 500px;
+  max-height: 1000px;
+  overflow-y: scroll;
+  -webkit-user-modify: read-write-plaintext-only;
+" contenteditable="plaintext-only">
+  @import url("https://unpkg.com/@propjockey/breakpoint-system@1.1.1/breakpoint-system.css");
 </style>
 
 
@@ -352,6 +360,8 @@
         Fail: ${count - pass}
       `
       updateQueue.forEach(([el, className]) => {
+        el.classList.remove("passed")
+        el.classList.remove("needs-eyes")
         el.classList.add(className)
       })
       updateQueue.length = 0
