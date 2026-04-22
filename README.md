@@ -2,7 +2,7 @@
 
 # Website for breakpoint-system from <img src="https://github.com/user-attachments/assets/87119fb5-c39d-429a-9bfd-424f0e100720" alt="" width="30px"> PropJockey
 
-A brand new way to write highly accessible, responsive CSS. Fluid design and typography units built in, custom-size breakpoints and custom-aliased queries, no scripts, no builds, 100% vanilla CSS. Deliver your designs.
+Highly accessible, responsive CSS designed in pixels and implemented 1:1 with the new Breakpoint Unit for a flawless fluid experience. Custom aliases, breakpoints, and queries with heavily researched defaults. No scripts, no builds, 100% vanilla CSS. Old tech, new ideas - 91% global user reach. Deliver your designs.
 
 Docs+Demos at: https://propjockey.breakpoint-system.com
 
@@ -18,7 +18,7 @@ OR
 
 Use your favorite NPM CDN and include it on your page for small projects. Like so:
 ```html
-<link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.0.0/breakpoint-system.css">
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.1.0/breakpoint-system.css">
 ```
 
 ---

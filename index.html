@@ -20,7 +20,11 @@
     gtag('js', new Date());
     gtag('config', 'UA-146833088-2');
   </script>
-  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.0.0/breakpoint-system.css">
+  <!-- -->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.1.0/breakpoint-system.css">
+  <!-- -- >
+    <link rel="stylesheet" type="text/css" href="../breakpoint-system/breakpoint-system.css">
+  <!-- -->
   <style>
     @layer pink-overscroll {
       :where(.pink-overscroll) {
@@ -42,7 +46,7 @@
         white 100px
       ), #ff00c7;
       @supports (-webkit-hyphens: none) {
-        /* Sfari has an agressively stupid behavior to make the browser UI unreadable and obnoxious if there is a bg color. */
+        /* Safari has an agressively stupid behavior to make the browser UI unreadable and obnoxious if there is a bg color. */
         overscroll-behavior-y: none;
         background: white;
       }
@@ -634,7 +638,7 @@
       <b style="margin-block: var(--bpu-16px); display: block;">OR</b>
       <p>
         Use your favorite NPM CDN and include it on your page for small projects:<br>
-        <code class="html-block">&lt;link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.0.0/breakpoint-system.css"&gt;</code>
+        <code class="html-block">&lt;link rel="stylesheet" type="text/css" href="https://unpkg.com/@propjockey/breakpoint-system@1.1.0/breakpoint-system.css"&gt;</code>
       </p>
       <h3>The biggest accessibility problem with media queries is solved in the background.</h3>
       <p style="margin-bottom: var(--bpu-20px);">
@@ -822,6 +826,11 @@
             <dd>This initializes a set of element-width based breakpoints that individual components would respond to.</dd>
             <dd>By default the queries measure these breakpoints against <code>100cqw</code>.</dd>
             <dd>You would place the ".bp-node" on every component's root element.</dd>
+            <dt>Extensible (v1.1.0)</dt>
+            <dd>These class names are loose <code>.my-config--breakpoint-system</code> extends <code>.breakpoint-system</code>.</dd>
+            <dd>As an author, this allows you to SEE the dependency of your customized class name.</dd>
+            <dd>Optional, but helps ensure you never use one without the other.</dd>
+            <dd>(Authors only extend with prefixes-- 🤝 we'll only extend with -suffixes)</dd>
           </dl>
 
           <section>
@@ -852,6 +861,7 @@
           <section>
             <h4 id="custom-breakpoints">Defining your own breakpoints</h4>
             <p>You can define as many breakpoint sets as you want. However, for consistency, we recommend using only one site-wide set for the widths of your stages, and one separate set for the widths of your nodes. Then add the <code>breakpoint-system</code> class to your element along with the class defining your chosen breakpoints, <var>my-webapp-breakpoints</var>. (our default sets already mix-in the <code>breakpoint-system</code> class instead of it being separate.)</p>
+            <p>Optionally, you can extend <code>.breakpoint-system</code> with a prefix to make the dependency obvious. <code>.my-webapp-breakpoints--breakpoint-system</code> will include the functionality of <code>.breakpoint-system</code> plus your configuration. (We reserve -suffixes for future expansions; Your prefixed expansion can then easily opt-in to our suffixed expansions. 🧑‍💻🤝👽)</p>
             <p>You can specify up to 10 breakpoints per set. These variables take <code>&lt;number&gt;</code> values representing the pixel size of the breakpoint.</p>
             <code class="code-block">
               <var>.my-webapp-breakpoints</var> {
@@ -862,7 +872,7 @@
                 --bp-9-at: <var>0</var>;
               }
             </code>
-            <p>Set the value to 0 to omit it from the set, otherwise define the values in order from smallest to largest.</p>
+            <p>Set the value to 0 to omit it from the end of the set, otherwise <strong>define the values in order from smallest to largest</strong>. You should also provide a default <code>--bp-fluidity</code> that omits the 0 breakpoints.</p>
             <aside class="aside-callout">
               <p>When using our breakpoint unit, each breakpoint also defines where the <code>--bpu-1px</code> value resets from its fluid scaling back to 1 pixel (scaled by the user's system font size).</p>
               <p>The smallest breakpoint defined doesn't technically "break" but instead <code>--bp-0-at</code> defines where your <code>--bpu-16px</code> value would actually equal <code>16px</code>, for example. In viewports bigger than <code>--bp-0-at</code> but less than the next breakpoint, "16px" would be bigger. In viewports smaller than <code>--bp-0-at</code>, it would be smaller.</p>
@@ -888,7 +898,7 @@
 
             <p>The built-in query vars are used as "<code>&lt;integer&gt;</code>" bit-flags for true or false. They do not inherit so you should almost always alias them or use the default sets which come pre-aliased (aliased queries DO inherit). Not only are aliases good for ease of readability, but <code>calc()</code> and <code>if(style())</code> queries running on child elements need to inherit the flags.</p>
 
-            <p>The query flags are all 0 if the corresponding breakpoint value is 0 (or if the breakpoint is manually excluded from <code>--bp-fluidity</code>). The query "in" results are aware of skipped breakpoints and behave as you would hope. (if you are in the md range but md is currently excluded, <code>--qin-sm</code> is still 1.)</p>
+            <p>The query "in" results are aware of skipped breakpoints (excluded from <code>--bp-fluidity</code>) and behave as you would hope. (if you are in the md range but md is currently excluded, <code>--qin-sm</code> is still 1.)</p>
 
             <code class="code-block">
               <var>.my-webapp-breakpoints</var> {
@@ -904,6 +914,8 @@
                 --bp-9-at: <var>0</var>;
               }
             </code>
+
+            <p>⚠️ For consistency and clarity of your code, the query flags for breakpoints you've omitted from <code>--bp-fluidity</code> or set to 0 should not be used and especially not used inverted (1 minus the query flag). Their results like the breakpoint itself should be considered undefined, even though they are typically all 0 in those cases. Space Toggle query variants may not follow the same rules for undefined breakpoint variables and should also be avoided.</p>
 
             <section>
               <h5 id="container-style-queries">@container style() queries</h5>
@@ -1024,6 +1036,7 @@
           </section>
         </div>
       </details>
+
       <section id="stage">
         <h3>Excellent default breakpoints for stages</h3>
         <ul>
@@ -1078,6 +1091,10 @@
                 --qlt-xxl: var(--bp-qlt-6);
                 --qin-xxl: var(--bp-qin-6);
                 --fluid-xxl: var(--bp-fluid-6);
+
+                /* default fluidity for all bp-stage elements, omitting the last 3 "0" breakpoints */
+                --bp-fluidity: var(--bp-fluid-0) var(--bp-fluid-1) var(--bp-fluid-2) var(--bp-fluid-3)
+                  var(--bp-fluid-4) var(--bp-fluid-5) var(--bp-fluid-6);
 
                 --bp-7-at: 0;
                 --bp-8-at: 0;
@@ -1377,6 +1394,9 @@
                 --qlt-lg-page: var(--bp-qlt-9);
                 --qin-lg-page: var(--bp-qin-9);
                 --fluid-lg-page: var(--bp-fluid-9);
+
+                /* default fluidity is all of them */
+                --bp-fluidity: var(--bp-fluid-all);
               }
             </code>
             <h5 id="node-breakpoint-values">Why these specific values?</h5>
@@ -1431,6 +1451,249 @@
         <details class="test-blade" id="tests-node">
           <summary><h4>Tests</h4></summary>
           <div><p>TODO</p></div>
+        </details>
+      </section>
+
+      <section id="space-toggles">
+        <h3>Space Toggle Query Expansion (v1.1.0)</h3>
+        <p style="margin-bottom: var(--bpu-16px);">
+          Opt in to add space-toggle variants for all of your query conditionals for an even better authoring experience. And no compromise on the base library's broad 91% global user reach! Full support!
+        </p>
+        <p>
+          It's not the promised land of the incredible future focused <a href="https://developer.chrome.com/blog/if-article">if(style()) API</a> but it's the next best thing <em>and probably the primary drive behind early and wide author demand of if(style())</em>!
+        </p>
+        <details class="docs-blade" id="docs-space-toggle-expansion">
+          <summary><h3>Space Toggle API</h3></summary>
+          <div>
+            <p>Add <code>-st</code> to the end of any of our 3 class names to opt-in to this feature.</p>
+            <p>
+              Nothing is likely to come close to the awesome power of CSS's <code>if(style())</code> for quite some time. But for broad browser compatibility without taking a hit to your user reach, if you've <a href="https://github.com/propjockey/css-sweeper#css-is-a-programming-language-thanks-to-the-space-toggle-trick">learned</a> <a href="https://lea.verou.me/blog/2020/10/the-var-space-hack-to-toggle-multiple-values-with-one-custom-property/">about</a> <a href="https://css-tricks.com/the-css-custom-property-toggle-trick/">space</a> <a href="https://kizu.dev/cyclic-toggles/">toggles</a>, it will make using <code>breakpoint-system</code> in today's world even more useful.
+            </p>
+            <p>You can use our broad-reach API, <code>calc() switches</code> to toggle <em>any</em> property (one or many) by computing a <a href="https://codepen.io/propjockey/pen/azmVpvd?editors=1100">negative animation delay and using an always-paused animation hack</a> as a sort of array-index-lookup. This causes animation tainting so it's not ideal.</p>
+            <p>With our space toggle expansion, we've first cast the query "in" set of bits into corresponding Space Toggles and we add on default aliases to the <code>.bp-stage-st</code> and <code>.bp-node-st</code> classes for you.</p>
+            <code class="code-block">
+              --qin-md-note // 0
+              --qin-md-note-st // initial
+              --qin-md-note-ist // space
+
+              --qin-md-card // 1
+              --qin-md-card-st // space
+              --qin-md-card-ist // initial
+            </code>
+            <h4 id="space-toggle-brief">A brief space toggle explainer</h4>
+            <p>
+              In CSS, <code>initial</code> acts as a sort of super powered <var>undefined</var>. If you include it next to another value:
+              <code class="code-block">
+                --also-undefined: var(--i-am-initial) red;
+              </code>
+              the whole variable is treated as <code>initial</code>, like <code>false &&</code> in javascript, and like <code>0 *</code> in calc() switches (math). Then you can use var fallbacks to toggle to the opposite state:
+              <code class="code-block">
+                color: var(--also-undefined, blue);
+              </code>
+              In contrast, the <code>&nbsp;</code> (space) value can be added to any property <em>and it does nothing to the value</em> like <code>true &&</code> in javascript, and like <code>1 *</code> in calc() switches (math). So you can use one space toggle var in several properties, and they'll all flip to their independently specified opposite states.
+            </p>
+            <aside class="aside-callout">
+              <p>
+                <a href="https://propjockey.github.io/css-media-vars/">css-media-vars</a> was the first time responsive design and space toggles were used together; A library I've used on every PropJockey website (until breakpoint-system) since I released it. css-media-vars was the very first CSS library to feature space toggles, releasing only a very short time after I coined the term.
+              </p>
+            </aside>
+            <p>Since <code>initial</code> is objectively analogous to falsey, and space truthy, the default "qin" space toggle variants (<code>--qin-xxs-st</code>) are <em>space if you are in that breakpoint range</em> and <em>initial if you are not in that breakpoint range</em>.</p>
+            <p>However, in real-world use of space toggles, it is sometimes useful to have the inverted, NOT space toggle be the preference so I've also provided "inverted space toggles" (<code>--qin-xxs-ist</code>) for each breakpoint which are the opposite state: <em>initial if you are in that breakpoint range</em> and <em>space if you are not in that breakpoint range</em>. (It was computationally "free" to add them, and prior to if(style()) it's not trivial to NOT a Space Toggle).</p>
+            <h4 id="more-toggles">Space Toggle variants of qgte and qlt are also included</h4>
+            <p>Following the same aliasing pattern, <code>--qgte-xl</code> becomes <code>--qgte-xl-st</code> and the inverted set exists as well <code>--qgte-xl-ist</code>. It should be noted that <code>--qgte-xl-ist</code> is already an alias of <code>--qlt-xl-st</code> since they gte and lt are logically opposite and we inverted one of them.</p>
+            <p>Many CSS authors think of Space Toggles using the inverted variant as their standard perspective, so the alias is important for clarity of intention.</p>
+            <h4 id="aliasing-space-toggles">Aliasing built in Space Toggle vars</h4>
+            <p>Like all the other query variables, these can be aliased for your own breakpoint sets however you see fit. This is the defaults for our stage and node breakpoint sets for reference:</p>
+            <code class="code-block">
+              /* default aliases for opt-in stage qin space toggles */
+              :where([class*="bp-stage-st"]) {
+                --qin-xxs-st: var(--bp-qin-0-st);
+                --qin-xs-st: var(--bp-qin-1-st);
+                --qin-sm-st: var(--bp-qin-2-st);
+                --qin-md-st: var(--bp-qin-3-st);
+                --qin-lg-st: var(--bp-qin-4-st);
+                --qin-xl-st: var(--bp-qin-5-st);
+                --qin-xxl-st: var(--bp-qin-6-st);
+
+                --qin-xxs-ist: var(--bp-qin-0-ist);
+                --qin-xs-ist: var(--bp-qin-1-ist);
+                --qin-sm-ist: var(--bp-qin-2-ist);
+                --qin-md-ist: var(--bp-qin-3-ist);
+                --qin-lg-ist: var(--bp-qin-4-ist);
+                --qin-xl-ist: var(--bp-qin-5-ist);
+                --qin-xxl-ist: var(--bp-qin-6-ist);
+
+                --qgte-xxs-st: var(--bp-qgte-0-st);
+                --qgte-xs-st: var(--bp-qgte-1-st);
+                --qgte-sm-st: var(--bp-qgte-2-st);
+                --qgte-md-st: var(--bp-qgte-3-st);
+                --qgte-lg-st: var(--bp-qgte-4-st);
+                --qgte-xl-st: var(--bp-qgte-5-st);
+                --qgte-xxl-st: var(--bp-qgte-6-st);
+
+                --qgte-xxs-ist: var(--bp-qgte-0-ist);
+                --qgte-xs-ist: var(--bp-qgte-1-ist);
+                --qgte-sm-ist: var(--bp-qgte-2-ist);
+                --qgte-md-ist: var(--bp-qgte-3-ist);
+                --qgte-lg-ist: var(--bp-qgte-4-ist);
+                --qgte-xl-ist: var(--bp-qgte-5-ist);
+                --qgte-xxl-ist: var(--bp-qgte-6-ist);
+
+                --qlt-xxs-st: var(--bp-qlt-0-st);
+                --qlt-xs-st: var(--bp-qlt-1-st);
+                --qlt-sm-st: var(--bp-qlt-2-st);
+                --qlt-md-st: var(--bp-qlt-3-st);
+                --qlt-lg-st: var(--bp-qlt-4-st);
+                --qlt-xl-st: var(--bp-qlt-5-st);
+                --qlt-xxl-st: var(--bp-qlt-6-st);
+
+                --qlt-xxs-ist: var(--bp-qlt-0-ist);
+                --qlt-xs-ist: var(--bp-qlt-1-ist);
+                --qlt-sm-ist: var(--bp-qlt-2-ist);
+                --qlt-md-ist: var(--bp-qlt-3-ist);
+                --qlt-lg-ist: var(--bp-qlt-4-ist);
+                --qlt-xl-ist: var(--bp-qlt-5-ist);
+                --qlt-xxl-ist: var(--bp-qlt-6-ist);
+              }
+            </code>
+            <code class="code-block">
+              /* default aliases for opt-in node qin space toggles */
+              :where([class*="bp-node-st"]) {
+                --qin-coin-st: var(--bp-qin-0-st);
+                --qin-sm-note-st: var(--bp-qin-1-st);
+                --qin-sm-card-st: var(--bp-qin-2-st);
+                --qin-sm-page-st: var(--bp-qin-3-st);
+                --qin-md-note-st: var(--bp-qin-4-st);
+                --qin-md-card-st: var(--bp-qin-5-st);
+                --qin-md-page-st: var(--bp-qin-6-st);
+                --qin-lg-note-st: var(--bp-qin-7-st);
+                --qin-lg-card-st: var(--bp-qin-8-st);
+                --qin-lg-page-st: var(--bp-qin-9-st);
+
+                --qin-coin-ist: var(--bp-qin-0-ist);
+                --qin-sm-note-ist: var(--bp-qin-1-ist);
+                --qin-sm-card-ist: var(--bp-qin-2-ist);
+                --qin-sm-page-ist: var(--bp-qin-3-ist);
+                --qin-md-note-ist: var(--bp-qin-4-ist);
+                --qin-md-card-ist: var(--bp-qin-5-ist);
+                --qin-md-page-ist: var(--bp-qin-6-ist);
+                --qin-lg-note-ist: var(--bp-qin-7-ist);
+                --qin-lg-card-ist: var(--bp-qin-8-ist);
+                --qin-lg-page-ist: var(--bp-qin-9-ist);
+
+                --qgte-coin-st: var(--bp-qgte-0-st);
+                --qgte-sm-note-st: var(--bp-qgte-1-st);
+                --qgte-sm-card-st: var(--bp-qgte-2-st);
+                --qgte-sm-page-st: var(--bp-qgte-3-st);
+                --qgte-md-note-st: var(--bp-qgte-4-st);
+                --qgte-md-card-st: var(--bp-qgte-5-st);
+                --qgte-md-page-st: var(--bp-qgte-6-st);
+                --qgte-lg-note-st: var(--bp-qgte-7-st);
+                --qgte-lg-card-st: var(--bp-qgte-8-st);
+                --qgte-lg-page-st: var(--bp-qgte-9-st);
+
+                --qgte-coin-ist: var(--bp-qgte-0-ist);
+                --qgte-sm-note-ist: var(--bp-qgte-1-ist);
+                --qgte-sm-card-ist: var(--bp-qgte-2-ist);
+                --qgte-sm-page-ist: var(--bp-qgte-3-ist);
+                --qgte-md-note-ist: var(--bp-qgte-4-ist);
+                --qgte-md-card-ist: var(--bp-qgte-5-ist);
+                --qgte-md-page-ist: var(--bp-qgte-6-ist);
+                --qgte-lg-note-ist: var(--bp-qgte-7-ist);
+                --qgte-lg-card-ist: var(--bp-qgte-8-ist);
+                --qgte-lg-page-ist: var(--bp-qgte-9-ist);
+
+                --qlt-coin-st: var(--bp-qlt-0-st);
+                --qlt-sm-note-st: var(--bp-qlt-1-st);
+                --qlt-sm-card-st: var(--bp-qlt-2-st);
+                --qlt-sm-page-st: var(--bp-qlt-3-st);
+                --qlt-md-note-st: var(--bp-qlt-4-st);
+                --qlt-md-card-st: var(--bp-qlt-5-st);
+                --qlt-md-page-st: var(--bp-qlt-6-st);
+                --qlt-lg-note-st: var(--bp-qlt-7-st);
+                --qlt-lg-card-st: var(--bp-qlt-8-st);
+                --qlt-lg-page-st: var(--bp-qlt-9-st);
+
+                --qlt-coin-ist: var(--bp-qlt-0-ist);
+                --qlt-sm-note-ist: var(--bp-qlt-1-ist);
+                --qlt-sm-card-ist: var(--bp-qlt-2-ist);
+                --qlt-sm-page-ist: var(--bp-qlt-3-ist);
+                --qlt-md-note-ist: var(--bp-qlt-4-ist);
+                --qlt-md-card-ist: var(--bp-qlt-5-ist);
+                --qlt-md-page-ist: var(--bp-qlt-6-ist);
+                --qlt-lg-note-ist: var(--bp-qlt-7-ist);
+                --qlt-lg-card-ist: var(--bp-qlt-8-ist);
+                --qlt-lg-page-ist: var(--bp-qlt-9-ist);
+              }
+            </code>
+            <h4 id="space-toggle-tradeoff">The fallback implementation uses an always-paused animation</h4>
+            <p><em>And we just invented a way to do it without animation tainting.</em></p>
+            <p>The default implementation is trivial using <code>if(style())</code> to cast the bit into a space toggle and wrapped in the appropriate @supports statement. As of April 2026, global user reach for the primary implementation is 66%.</p>
+            <p>The remaining 25% of our current global reach is implemented with animations.</p>
+            <p>(There are no performance issues to worry about - they are hard-coded as paused and only ever recompute when the entire element is already recomputing because of a size change.)</p>
+            <aside class="aside-callout">
+              <p>Thankfully, neither Safari nor Firefox seem to care even when a space toggle is animation tainted - setting properties that can't be animated (primarily other animations) still works.</p>
+              <p>However, 2% of that 25% using the animation fallback implementation are firefox users and the technique to avoid animation tainting does not work in firefox (<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=2033678">I filed a bug</a>) (and <a href="https://bugs.webkit.org/show_bug.cgi?id=312853">a related Safari bug</a> we avoided). So firefox has its own, third implementation automatically triggered with appropriate @supports clauses.</p>
+              <p>The end DX is the same across all browsers but <a href="https://github.com/propjockey/breakpoint-system/issues">please let me know</a> if you run into any edge cases.</p>
+            </aside>
+            <h5 id="adding-animations-while-using-space-toggles">Adding animations while opting into space toggles</h5>
+            <p>
+              When you opt-in to space toggles (<code>.bp-node-st</code> etc) and you want to also add an animation to the root of your component or layout, you'll be "unplugging" our fallback behavior.
+            </p>
+            <p>
+              To "plug-it-back-in", we've provided a corresponding variable for every possible animation property you might be setting. For example, using the excellent 🤌 animations from <a href="https://open-props.style/">Open Props</a>:
+            </p>
+            <code class="code-block">
+              animation: var(--animation-fade-in);
+            </code>
+            becomes
+            <code class="code-block">
+              animation: var(--bp-animation) var(--animation-fade-in);
+            </code>
+            <p>
+              You <strong>do not</strong> add a comma after our parallel variable - our variable will have a trailing comma if we've set any animation for the current user. If the current user is in a browser that supports if(style()), our parallel variables will be a single space, which does nothing.
+            </p>
+            <p>
+              All 12 standard CSS animation properties have a 1:1 parallel variable from breakpoint system. So if you set any of them, or all of them, always put ours first, never put a comma after it, and you're golden!
+            </p>
+            <code class="code-block">
+              animation:
+                var(--bp-animation) var(--animation-slide-in-up);
+
+              animation-delay:
+                var(--bp-animation-delay) var(--flinch);
+
+              animation-timing-function:
+                var(--bp-animation-timing-function) var(--ease-spring-3);
+            </code>
+            <h4 id="space-toggle-usage">Example using space toggles</h4>
+            <p>While the world eagerly waits for <code>if(style())</code>, this works for our full global user reach at 91% (as of April 2026).</p>
+            <code class="code-block">
+              .my-layout--bp-stage-st {
+                --max-content-if-xs:
+                  var(--qlt-sm-st) max-content;
+
+                grid-auto-rows:
+                  var(--max-content-if-xs, auto);
+
+                grid-template-rows:
+                  var(--max-content-if-xs, none);
+
+                --gtc-for-xs: var(--qlt-sm-st) 1fr;
+
+                --gtc-for-sm: var(--qin-sm-st)
+                  1fr var(--bpu-160px);
+
+                --gtc-for-md: var(--qgte-md-st)
+                  calc(var(--bpu-1px) * 120) 1fr var(--bpu-160px);
+
+                grid-template-columns:
+                  var(--gtc-for-xs,
+                    var(--gtc-for-sm,
+                      var(--gtc-for-md)));
+              }
+            </code>
+          </div>
         </details>
       </section>
     </article>
@@ -1973,33 +2236,27 @@
             position: relative;
             gap: var(--bpu-8px);
             overflow: auto;
-            grid-template-rows: auto var(--bpu-96px) max-content;
             margin: auto;
-            @container style(--qin-xxs: 1) {
-              grid-auto-rows: max-content;
-              grid-template-rows: max-content;
-              grid-template-columns: 1fr;
-              grid-template-areas: "tut-head" "tut-body-ad" "tut-body" "tut-160" "tut-120";
-            }
-            @container style(--qin-sm: 1) {
-              grid-template-columns: 1fr calc(var(--bpu-1px) * 160);
-              grid-template-areas: "tut-head tut-head" "tut-body-ad tut-body-ad" "tut-body tut-160" "tut-120 tut-120";
-            }
-            @container style(--qin-md: 1) {
-              grid-template-columns: calc(var(--bpu-1px) * 120) 1fr calc(var(--bpu-1px) * 160);
-              grid-template-areas: "tut-head tut-head tut-head" "tut-120 tut-body-ad tut-160" "tut-120 tut-body tut-160";
-            }
-            @supports not ((background: paint(for-chromium)) and (animation-composition: add)) {
-              animation: safari-firefox-compat 3s step-end
-                calc(var(--qin-sm) * -1s + var(--qin-md) * -2s) paused;
-            }
+
+            --max-content-if-xxs: var(--qin-xxs-st) max-content;
+            grid-auto-rows: var(--max-content-if-xxs, auto);
+            grid-template-rows: var(--max-content-if-xxs, auto var(--bpu-96px) max-content);
+
+            --gtc-for-xxs: var(--qin-xxs-st) 1fr;
+            --gtc-for-sm: var(--qin-sm-st) 1fr var(--bpu-160px);
+            --gtc-for-md: var(--qin-md-st) calc(var(--bpu-1px) * 120) 1fr var(--bpu-160px);
+            grid-template-columns: var(--gtc-for-xxs, var(--gtc-for-sm, var(--gtc-for-md)));
+
+            --gta-for-xxs: var(--qin-xxs-st) "tut-head" "tut-body-ad" "tut-body" "tut-160" "tut-120";
+            --gta-for-sm: var(--qin-sm-st) "tut-head tut-head" "tut-body-ad tut-body-ad" "tut-body tut-160" "tut-120 tut-120";
+            --gta-for-md: var(--qin-md-st) "tut-head tut-head tut-head" "tut-120 tut-body-ad tut-160" "tut-120 tut-body tut-160";
+            grid-template-areas: var(--gta-for-xxs, var(--gta-for-sm, var(--gta-for-md)));
+
             .tut-head { grid-area: tut-head; font-size: var(--bpu-xxl); text-align: center; }
             .tut-120 {
               grid-area: tut-120;
-              /* position: absolute; safari container queries are broken. just placed this at the bottom for now */
-              @container style(--qin-md: 1) {
-                position: static;
-              }
+              --pos: var(--qin-md-st) static;
+              position: var(--pos, absolute);
             }
             .tut-body-ad { grid-area: tut-body-ad; }
             .tut-body { grid-area: tut-body; }
@@ -2045,7 +2302,6 @@
               // creating a reduced case is difficult because it seems to be a byproduct of render time and/or memory
               // use that causes the render queue to stop before being emptied (then flushing that update next frame).
               // edit: Safari is broken with cq beyond that too... TODO: try to reduce grid position and area cq bugs for them. 🤞
-              */
               @container style(--qin-sm-note: 1) {
                 --content: " - Wide Skyscraper";
               }
@@ -2055,27 +2311,32 @@
               @container style(--qin-lg-note: 1) {
                 --content: " - Leaderboard";
               }
-
               @supports not ((background: paint(for-chromium)) and (animation-composition: add)) {
+                @keyframes name-compat {
+                  0%, 33.332% {
+                    --content: " - Wide Skyscraper";
+                  } /* index 0 * /
+                  33.333%, 66.665% {
+                    --content: " - Medium Rectangle";
+                  } /* index 1 * /
+                  66.666%, 100% {
+                    --content: " - Leaderboard";
+                  } /* index 2 * /
+                }
                 animation: name-compat 3s step-end
                   calc(var(--qin-sm-page) * -1s + var(--qin-lg-note) * -2s) paused;
               }
+              */
+              --sm-note-content: var(--qin-sm-note-st) " - Wide Skyscraper";
+              --sm-page-content: var(--qin-sm-page-st) " - Medium Rectangle";
+              --lg-note-content: var(--qin-lg-note-st) " - Leaderboard";
+              --content: var(--sm-note-content, var(--sm-page-content, var(--lg-note-content)));
+
               font-size: var(--bpu-sm);
               counter-reset: w var(--width) h var(--height);
               content: counter(w) " x " counter(h) var(--content, "");
             }
           }
-        }
-        @keyframes name-compat {
-          0%, 33.332% {
-            --content: " - Wide Skyscraper";
-          } /* index 0 */
-          33.333%, 66.665% {
-            --content: " - Medium Rectangle";
-          } /* index 1 */
-          66.666%, 100% {
-            --content: " - Leaderboard";
-          } /* index 2 */
         }
       </style>
       <script>
@@ -2168,16 +2429,16 @@
               <samp>px</samp>
             </code>
             <div class="emulated-stage-viewport">
-              <div class="bp-stage emulated-stage" style="--bp-emulate: 1200; --bp-emulate-rem: 16;" aria-hidden="true">
+              <div class="bp-stage-st emulated-stage" style="--bp-emulate: 1200; --bp-emulate-rem: 16;" aria-hidden="true">
                 <div class="tut-main">
                   <div class="tut-head">PropJockey<br />breakpoint-system</div>
                   <div class="tut-120"></div>
                   <div class="tut-body-ad">
-                    <div class="bp-node ad"></div>
+                    <div class="bp-node-st ad"></div>
                   </div>
                   <div class="tut-body"></div>
                   <div class="tut-160">
-                    <div class="bp-node ad"></div>
+                    <div class="bp-node-st ad"></div>
                   </div>
                 </div>
               </div>
@@ -2574,7 +2835,7 @@
             </aside>
             <p><code>--bp-fluidity</code> documents what designs are specified. For any breakpoints omitted, the bpu values will not reset to their baseline size at those locations and will instead continue expanding until the next included breakpoint is reached.</p>
             <p>The collection of queries for omitted breakpoints will always return 0. The only behavior change for queries of included breakpoints is: <code>--qin-*</code> is aware that if your viewport is in medium range but medium is omitted, you are "in" the small range instead, which expands all the way to just before "lg" if large is included.</p>
-            <p>The default <code>--bp-fluidity</code> value is <code>var(--bp-fluid-all)</code> which contains all breakpoints not set in configuration to 0.</p>
+            <p>The default <code>--bp-fluidity</code> value is <code>var(--bp-fluid-all)</code>. <code>.bp-stage</code> defaults it to the first 7 fluid vars (0 to 6), corresponding to the breakpoints in that set.</p>
           </div>
         </details>
         <details class="test-blade" id="tests-fluidity">

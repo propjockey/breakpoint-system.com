@@ -1,0 +1,356 @@
+<style>
+  @import url("https://unpkg.com/@propjockey/breakpoint-system@1.1.0/breakpoint-system.css");
+
+  * { font-family: sans-serif; }
+
+  :root {
+    --stage-0-at: 375;
+    --stage-1-at: 480;
+    --stage-2-at: 768;
+    --stage-3-at: 1024;
+    --stage-4-at: 1280;
+    --stage-5-at: 1440;
+    --stage-6-at: 1920;
+
+    --node-0-at: 120;
+    --node-1-at: 160;
+    --node-2-at: 240;
+    --node-3-at: 300;
+    --node-4-at: 384;
+    --node-5-at: 468;
+    --node-6-at: 600;
+    --node-7-at: 728;
+    --node-8-at: 800;
+    --node-9-at: 970;
+  }
+
+  * {
+    --cmp: clamp(-1, var(--expect) - var(--value), 1);
+    --eq: calc(1 - abs(var(--cmp)));
+    --lt: calc(-1 * min(0, var(--cmp)));
+    --lte: calc(1 - max(0, var(--cmp)));
+    --gt: calc(max(0, var(--cmp)));
+    --gte: calc(1 + min(0, var(--cmp)));
+    --neq: abs(var(--cmp));
+  }
+  @property --is {
+    syntax: "<integer>";
+    initial-value: -1;
+    inherits: true;
+  }
+
+  section {
+    display: block;
+    clear: both;
+    position: relative;
+  }
+
+  .test-container {
+    display: inline-block;
+    container-type: inline-size;
+    width: 100%;
+    margin: 16px;
+    float: left;
+
+    > * {
+      aspect-ratio: 1 / 1;
+      width: 150px;
+      background: rgb(
+        calc((1 - var(--is)) * 172),
+        calc(var(--is) * 128),
+        0
+      );
+      &::before {
+        content: attr(style);
+      }
+    }
+  }
+  #output {
+    padding-bottom: 20px;
+  }
+  header {
+    position: sticky;
+    border-bottom: #FF00C7 solid 10px;
+    top: 0px;
+    z-index: 9;
+    background: white;
+    h1 { font-size: 16px; }
+    display: grid;
+    grid-template-areas: "a b" "c b";
+    > :nth-child(1) { grid-area: a; }
+    > :nth-child(2) { grid-area: c; }
+    > :nth-child(3) { grid-area: b; }
+  }
+</style>
+
+<header>
+<h1>@propjockey/breakpoint-system unit tests</h1>
+<label>Show passing: <input id="show-passing" type="checkbox"></label>
+<div id="output" style="text-align: center;"></div>
+</header>
+
+<section>
+  <h2>bp-stage boundaries</h2>
+  <section>
+    <h3>at 0</h3>
+    <div class="test-container" style="width: calc(1px * var(--stage-0-at));">
+      <div class="bp-stage" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--stage-0-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 1</h3>
+    <div class="test-container" style="width: calc(1px * var(--stage-1-at));">
+      <div class="bp-stage" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--stage-1-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 2</h3>
+    <div class="test-container" style="width: calc(1px * var(--stage-2-at));">
+      <div class="bp-stage" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--stage-2-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 3</h3>
+    <div class="test-container" style="width: calc(1px * var(--stage-3-at));">
+      <div class="bp-stage" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--stage-3-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 4</h3>
+    <div class="test-container" style="width: calc(1px * var(--stage-4-at));">
+      <div class="bp-stage" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--stage-4-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 5</h3>
+    <div class="test-container" style="width: calc(1px * var(--stage-5-at));">
+      <div class="bp-stage" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--stage-5-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 6</h3>
+    <div class="test-container" style="width: calc(1px * var(--stage-6-at));">
+      <div class="bp-stage" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--stage-6-at);"></div>
+    </div>
+  </section>
+</section>
+
+<section>
+  <h2>bp-node boundaries</h2>
+  <section>
+    <h3>at 0</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-0-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-0-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 1</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-1-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-1-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 2</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-2-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-2-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 3</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-3-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-3-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 4</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-4-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-4-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 5</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-5-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-5-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 6</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-6-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-6-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 7</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-7-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-7-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 8</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-8-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-8-at);"></div>
+    </div>
+  </section>
+  <section>
+    <h3>at 9</h3>
+    <div class="test-container" style="width: calc(1px * var(--node-9-at));">
+      <div class="bp-node" style="--expect: var(--_bp-q-lower-bound); --is: var(--eq); --value: var(--node-9-at);"></div>
+    </div>
+  </section>
+</section>
+
+<section>
+  <h2>All Queries in all scenarios</h2>
+  <div id="generated"></div>
+</section>
+
+<script>
+  const eqTests = (isSpaceToggle, stageNode, at, plusVp, vars, valFn) => {
+    let html = ""
+    for (let varIndex = 0; varIndex < vars.length; varIndex++) {
+      html += `
+        <div class="test-container" style="width: calc(1px * var(--${stageNode}-${at}-at) ${
+          plusVp ? `+ ${plusVp}px` : ""
+        });">
+          <div class="bp-${stageNode}${isSpaceToggle ? "-st" : ""}" style="
+            ${isSpaceToggle ? `--if-on-1: var(${vars[varIndex]}) 1;` : ``}
+            --expect: var(${
+              isSpaceToggle ? `--if-on-1, 0` : vars[varIndex]
+            }); --is: var(--eq); --value: ${valFn(at, varIndex)};
+          "></div>
+        </div>
+      `
+    }
+    return html
+  }
+
+  const getQueryVars = (stageNode, query, variant) => {
+    const queries = stageNode === "node" ? [
+      "--qin-coin",
+      "--qin-sm-note",
+      "--qin-sm-card",
+      "--qin-sm-page",
+      "--qin-md-note",
+      "--qin-md-card",
+      "--qin-md-page",
+      "--qin-lg-note",
+      "--qin-lg-card",
+      "--qin-lg-page"
+    ] : [
+      "--qin-xxs",
+      "--qin-xs",
+      "--qin-sm",
+      "--qin-md",
+      "--qin-lg",
+      "--qin-xl",
+      "--qin-xxl"
+    ]
+    return queries.map(prop => {
+      return prop.replace("qin", query) + (variant ? `-${variant}` : "")
+    })
+  }
+
+  const queryVariantValueFn = (query, variant) => {
+    if (query === "qin") {
+      return variant === "ist"
+        ? ((at, varIndex) => at === varIndex ? 0 : 1)
+        : ((at, varIndex) => at === varIndex ? 1 : 0)
+    }
+    if (query === "qgte") {
+      return variant === "ist"
+        ? ((at, varIndex) => at >= varIndex ? 0 : 1)
+        : ((at, varIndex) => at >= varIndex ? 1 : 0)
+    }
+    if (query === "qlt") {
+      return variant === "ist"
+        ? ((at, varIndex) => at < varIndex ? 0 : 1)
+        : ((at, varIndex) => at < varIndex ? 1 : 0)
+    }
+  }
+
+  const anyTest = (stageNode, plusVp, query, variant) => {
+    const titleVariant = variant ? (
+      (variant === "ist" ? "Inverted " : "") +
+      "Space Toggle"
+    ) : ""
+
+    const vars = getQueryVars(stageNode, query, variant)
+
+    if (plusVp < 0) {
+      // sub zero wins
+      return `
+        <section>
+          <h3>.bp-${stageNode}${(!!variant) ? "-st" : ""} ${titleVariant} ${query} at viewport 0 minus ${Math.abs(plusVp)}px</h3>
+          ${eqTests(!!variant, stageNode, 0, plusVp, vars, queryVariantValueFn(query, variant))}
+        </section>
+      `
+    }
+
+    let output = ""
+    for (let at = 0; at < vars.length; at++) {
+      output += `
+        <section>
+          <h3>.bp-${stageNode}${(!!variant) ? "-st" : ""} ${titleVariant} ${query} at viewport ${at} ${plusVp ? `+ ${plusVp}px` : ""}</h3>
+          ${eqTests(!!variant, stageNode, at, plusVp, vars, queryVariantValueFn(query, variant))}
+        </section>
+      `
+    }
+    return output
+  }
+
+  const allTests = (stageNode, plusVp = 0) => {
+    const queries = ["qin", "qgte", "qlt"]
+    const variants = ["", "st", "ist"]
+    let output = ""
+
+    variants.forEach(variant => {
+      queries.forEach(query => {
+        output += anyTest(stageNode, plusVp, query, variant)
+      })
+    })
+
+    return output
+  }
+
+  let allHTML = ""
+
+  allHTML += allTests("stage")
+  allHTML += allTests("stage", 100)
+  allHTML += allTests("stage", -175)
+  allHTML += allTests("node")
+  allHTML += allTests("node", 39)
+  allHTML += allTests("node", -50)
+
+  document.getElementById("generated").innerHTML = allHTML
+
+  const updateQueue = [] // batch writes
+  setTimeout(() => {
+    let count = 0
+    let pass = 0
+    document.querySelectorAll(".test-container > *").forEach(bpEl => {
+      const style = getComputedStyle(bpEl)
+      const is = parseInt(style.getPropertyValue("--is"))
+      count++
+      if (is === 1) {
+        pass++
+        updateQueue.push([bpEl.parentElement, "passed"])
+      } else {
+        updateQueue.push([bpEl.parentNode.parentNode, "needs-eyes"])
+      }
+    })
+    document.getElementById("output").innerHTML = `
+      <br />
+      Pass: ${pass} of ${count}<br />
+      <br />
+      Fail: ${count - pass}
+    `
+    updateQueue.forEach(([el, className]) => {
+      el.classList.add(className)
+    })
+    updateQueue.length = 0
+  }, 50)
+</script>
+<style>
+  :root:not(:has(#show-passing:checked)) .passed { position: absolute; left: -100vw; }
+  .needs-eyes { min-height: 200px; }
+</style>
