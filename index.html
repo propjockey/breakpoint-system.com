@@ -1047,7 +1047,7 @@
           <summary><h4>Stage Default Breakpoints and Aliases</h4></summary>
           <div>
             <code class="code-block">
-              :where(.bp-stage) {
+              :where([class*="bp-stage"]) {
                 --bp-0-at: 375;
                 /* just over 10% of mobile phones are 360 width, < 2% are smaller than that */
                 --qgte-xxs: var(--bp-qgte-0);
@@ -1093,8 +1093,10 @@
                 --fluid-xxl: var(--bp-fluid-6);
 
                 /* default fluidity for all bp-stage elements, omitting the last 3 "0" breakpoints */
-                --bp-fluidity: var(--bp-fluid-0) var(--bp-fluid-1) var(--bp-fluid-2) var(--bp-fluid-3)
-                  var(--bp-fluid-4) var(--bp-fluid-5) var(--bp-fluid-6);
+                --bp-fluidity: var(--fluid-xxs)
+                  var(--fluid-xs) var(--fluid-sm)
+                  var(--fluid-md) var(--fluid-lg)
+                  var(--fluid-xl) var(--fluid-xxl);
 
                 --bp-7-at: 0;
                 --bp-8-at: 0;
@@ -1247,7 +1249,11 @@
               If you subscribe to the idea that naming things is the hardest part of computer science, then I appreciate your grace if the following reference table I built to accomplish #5 doesn't pass international or individual rigor like a standardized test question. 😶 However, I do believe the concept is practical for building intuitive awareness in how much <code>width</code> each <strong>breakpoint name</strong> represents.
             </p>
 
-            <p>The smallest breakpoint <code>coin</code> covers everything under 160. From a tiny LEGO coin to POG slammers:</p>
+            <p>
+              The smallest breakpoint <code>coin</code> covers everything under 160 down to 0, with the baseline for the breakpoint set to 120.<br />
+              (design with pixels at the breakpoint for 1:1 handoff)<br />
+              From a tiny LEGO coin to POG slammers:
+            </p>
             <img class="coin-img" src="./assets/bp-node/coin.png" alt="image of several coins from a tiny lego coin, through US, Thai, and Japansese currency, ending with a POG representing widths of the 'coin' breakpoint" />
 
             <div class="data-table pink-overscroll">
@@ -1333,7 +1339,7 @@
             <p>For your own breakpoint values or to teach our defaults from your perspective, providing your own references in a similar breakdown could be of great benefit to those on your team and/or to the wider audience who shares your perspectives.</p>
             <p>Here's the full CSS for these default values and aliases if you'd like to make your own variant. The same rules from stage for the smallest breakpoint still (always) apply: It doesn't break at the smallest position defined and instead it only defines the <code>--bup-16px = 16px</code> point within the range of 0 to the <em>next</em> breakpoint position.</p>
             <code class="code-block">
-              :where(.bp-node) {
+              :where([class*="bp-node"]) {
                 --bp-0-at: 120;
                 --qgte-coin: var(--bp-qgte-0);
                 --qlt-coin: var(--bp-qlt-0);
@@ -3201,7 +3207,7 @@
             <section>
               <h5>Default stage-level breakpoints, query aliases, fluid aliases, and typography scaling increase.</h5>
               <code class="code-block">
-                :where(.bp-stage) {
+                :where([class*="bp-stage"]) {
                   /* not a real bp, value is what effective-screensize is 16--bpu = 16 pixels? */
                   --bp-0-at: 375; /* just over 10% of mobile phones are 360 width, < 2% are smaller than that */
                   --qgte-xxs: var(--bp-qgte-0);
@@ -3245,6 +3251,11 @@
                   --qin-xxl: var(--bp-qin-6);
                   --fluid-xxl: var(--bp-fluid-6);
 
+                  --bp-fluidity: var(--fluid-xxs)
+                    var(--fluid-xs) var(--fluid-sm)
+                    var(--fluid-md) var(--fluid-lg)
+                    var(--fluid-xl) var(--fluid-xxl);
+
                   --bp-7-at: 0;
                   --bp-8-at: 0;
                   --bp-9-at: 0;
@@ -3274,7 +3285,7 @@
             <section>
               <h5>Default node-level breakpoints, query aliases, fluid aliases, and typography scaling increase.</h5>
               <code class="code-block">
-                :where(.bp-node) {
+                :where([class*="bp-node"]) {
                   /* not a real bp, value is what effective-screensize is 16--bpu = 16 pixels? */
                   --bp-0-at: 120;
                   --qgte-coin: var(--bp-qgte-0);
@@ -3336,6 +3347,8 @@
                   --qin-lg-page: var(--bp-qin-9);
                   --fluid-lg-page: var(--bp-fluid-9);
 
+                  --bp-fluidity: var(--bp-fluid-all);
+
                   /* if you are designing components larger than these, use stage breakpoints instead */
                   --bpu-typography-scalar: calc(
                     1.2 +
@@ -3345,6 +3358,173 @@
                 }
               </code><br />
               <a href="#node-breakpoint-values">Docs</a><br /><br />
+            </section>
+            <section>
+              <h5>Example using space toggles</h5>
+              <code class="code-block">
+                .my-layout--bp-stage-st {
+                  --max-content-if-xs:
+                    var(--qlt-sm-st) max-content;
+
+                  grid-auto-rows:
+                    var(--max-content-if-xs, auto);
+
+                  grid-template-rows:
+                    var(--max-content-if-xs, none);
+
+                  --gtc-for-xs: var(--qlt-sm-st) 1fr;
+
+                  --gtc-for-sm: var(--qin-sm-st)
+                    1fr var(--bpu-160px);
+
+                  --gtc-for-md: var(--qgte-md-st)
+                    calc(var(--bpu-1px) * 120) 1fr var(--bpu-160px);
+
+                  grid-template-columns:
+                    var(--gtc-for-xs,
+                      var(--gtc-for-sm,
+                        var(--gtc-for-md)));
+                }
+              </code>
+              <a href="#docs-space-toggle-expansion">Docs</a><br /><br />
+            </section>
+            <section>
+              <h5>Default stage-level Space Toggle query aliases.</h5>
+              <p>
+                Opt-in to adding space toggle queries by appending <code>-st</code> to the end of any of the 3 breakpoint-system class names.<br />
+                Append <code>-st</code> to any of the query vars for the space toggle (space when true, initial when false).<br />
+                Append <code>-ist</code> to any of the query vars for the inverted space toggle (initial when true, space when false).
+              </p>
+              <code class="code-block">
+                :where([class*="bp-stage-st"]) {
+                  --qin-xxs-st: var(--bp-qin-0-st);
+                  --qin-xs-st: var(--bp-qin-1-st);
+                  --qin-sm-st: var(--bp-qin-2-st);
+                  --qin-md-st: var(--bp-qin-3-st);
+                  --qin-lg-st: var(--bp-qin-4-st);
+                  --qin-xl-st: var(--bp-qin-5-st);
+                  --qin-xxl-st: var(--bp-qin-6-st);
+
+                  --qin-xxs-ist: var(--bp-qin-0-ist);
+                  --qin-xs-ist: var(--bp-qin-1-ist);
+                  --qin-sm-ist: var(--bp-qin-2-ist);
+                  --qin-md-ist: var(--bp-qin-3-ist);
+                  --qin-lg-ist: var(--bp-qin-4-ist);
+                  --qin-xl-ist: var(--bp-qin-5-ist);
+                  --qin-xxl-ist: var(--bp-qin-6-ist);
+
+                  --qgte-xxs-st: var(--bp-qgte-0-st);
+                  --qgte-xs-st: var(--bp-qgte-1-st);
+                  --qgte-sm-st: var(--bp-qgte-2-st);
+                  --qgte-md-st: var(--bp-qgte-3-st);
+                  --qgte-lg-st: var(--bp-qgte-4-st);
+                  --qgte-xl-st: var(--bp-qgte-5-st);
+                  --qgte-xxl-st: var(--bp-qgte-6-st);
+
+                  --qgte-xxs-ist: var(--bp-qgte-0-ist);
+                  --qgte-xs-ist: var(--bp-qgte-1-ist);
+                  --qgte-sm-ist: var(--bp-qgte-2-ist);
+                  --qgte-md-ist: var(--bp-qgte-3-ist);
+                  --qgte-lg-ist: var(--bp-qgte-4-ist);
+                  --qgte-xl-ist: var(--bp-qgte-5-ist);
+                  --qgte-xxl-ist: var(--bp-qgte-6-ist);
+
+                  --qlt-xxs-st: var(--bp-qlt-0-st);
+                  --qlt-xs-st: var(--bp-qlt-1-st);
+                  --qlt-sm-st: var(--bp-qlt-2-st);
+                  --qlt-md-st: var(--bp-qlt-3-st);
+                  --qlt-lg-st: var(--bp-qlt-4-st);
+                  --qlt-xl-st: var(--bp-qlt-5-st);
+                  --qlt-xxl-st: var(--bp-qlt-6-st);
+
+                  --qlt-xxs-ist: var(--bp-qlt-0-ist);
+                  --qlt-xs-ist: var(--bp-qlt-1-ist);
+                  --qlt-sm-ist: var(--bp-qlt-2-ist);
+                  --qlt-md-ist: var(--bp-qlt-3-ist);
+                  --qlt-lg-ist: var(--bp-qlt-4-ist);
+                  --qlt-xl-ist: var(--bp-qlt-5-ist);
+                  --qlt-xxl-ist: var(--bp-qlt-6-ist);
+                }
+              </code>
+              <a href="#docs-space-toggle-expansion">Docs</a><br /><br />
+            </section>
+            <section>
+              <h5>Default node-level Space Toggle query aliases.</h5>
+              <p>
+                Opt-in to adding space toggle queries by appending <code>-st</code> to the end of any of the 3 breakpoint-system class names.<br />
+                Append <code>-st</code> to any of the query vars for the space toggle (space when true, initial when false).<br />
+                Append <code>-ist</code> to any of the query vars for the inverted space toggle (initial when true, space when false).
+              </p>
+              <code class="code-block">
+                :where([class*="bp-node-st"]) {
+                  --qin-coin-st: var(--bp-qin-0-st);
+                  --qin-sm-note-st: var(--bp-qin-1-st);
+                  --qin-sm-card-st: var(--bp-qin-2-st);
+                  --qin-sm-page-st: var(--bp-qin-3-st);
+                  --qin-md-note-st: var(--bp-qin-4-st);
+                  --qin-md-card-st: var(--bp-qin-5-st);
+                  --qin-md-page-st: var(--bp-qin-6-st);
+                  --qin-lg-note-st: var(--bp-qin-7-st);
+                  --qin-lg-card-st: var(--bp-qin-8-st);
+                  --qin-lg-page-st: var(--bp-qin-9-st);
+
+                  --qin-coin-ist: var(--bp-qin-0-ist);
+                  --qin-sm-note-ist: var(--bp-qin-1-ist);
+                  --qin-sm-card-ist: var(--bp-qin-2-ist);
+                  --qin-sm-page-ist: var(--bp-qin-3-ist);
+                  --qin-md-note-ist: var(--bp-qin-4-ist);
+                  --qin-md-card-ist: var(--bp-qin-5-ist);
+                  --qin-md-page-ist: var(--bp-qin-6-ist);
+                  --qin-lg-note-ist: var(--bp-qin-7-ist);
+                  --qin-lg-card-ist: var(--bp-qin-8-ist);
+                  --qin-lg-page-ist: var(--bp-qin-9-ist);
+
+                  --qgte-coin-st: var(--bp-qgte-0-st);
+                  --qgte-sm-note-st: var(--bp-qgte-1-st);
+                  --qgte-sm-card-st: var(--bp-qgte-2-st);
+                  --qgte-sm-page-st: var(--bp-qgte-3-st);
+                  --qgte-md-note-st: var(--bp-qgte-4-st);
+                  --qgte-md-card-st: var(--bp-qgte-5-st);
+                  --qgte-md-page-st: var(--bp-qgte-6-st);
+                  --qgte-lg-note-st: var(--bp-qgte-7-st);
+                  --qgte-lg-card-st: var(--bp-qgte-8-st);
+                  --qgte-lg-page-st: var(--bp-qgte-9-st);
+
+                  --qgte-coin-ist: var(--bp-qgte-0-ist);
+                  --qgte-sm-note-ist: var(--bp-qgte-1-ist);
+                  --qgte-sm-card-ist: var(--bp-qgte-2-ist);
+                  --qgte-sm-page-ist: var(--bp-qgte-3-ist);
+                  --qgte-md-note-ist: var(--bp-qgte-4-ist);
+                  --qgte-md-card-ist: var(--bp-qgte-5-ist);
+                  --qgte-md-page-ist: var(--bp-qgte-6-ist);
+                  --qgte-lg-note-ist: var(--bp-qgte-7-ist);
+                  --qgte-lg-card-ist: var(--bp-qgte-8-ist);
+                  --qgte-lg-page-ist: var(--bp-qgte-9-ist);
+
+                  --qlt-coin-st: var(--bp-qlt-0-st);
+                  --qlt-sm-note-st: var(--bp-qlt-1-st);
+                  --qlt-sm-card-st: var(--bp-qlt-2-st);
+                  --qlt-sm-page-st: var(--bp-qlt-3-st);
+                  --qlt-md-note-st: var(--bp-qlt-4-st);
+                  --qlt-md-card-st: var(--bp-qlt-5-st);
+                  --qlt-md-page-st: var(--bp-qlt-6-st);
+                  --qlt-lg-note-st: var(--bp-qlt-7-st);
+                  --qlt-lg-card-st: var(--bp-qlt-8-st);
+                  --qlt-lg-page-st: var(--bp-qlt-9-st);
+
+                  --qlt-coin-ist: var(--bp-qlt-0-ist);
+                  --qlt-sm-note-ist: var(--bp-qlt-1-ist);
+                  --qlt-sm-card-ist: var(--bp-qlt-2-ist);
+                  --qlt-sm-page-ist: var(--bp-qlt-3-ist);
+                  --qlt-md-note-ist: var(--bp-qlt-4-ist);
+                  --qlt-md-card-ist: var(--bp-qlt-5-ist);
+                  --qlt-md-page-ist: var(--bp-qlt-6-ist);
+                  --qlt-lg-note-ist: var(--bp-qlt-7-ist);
+                  --qlt-lg-card-ist: var(--bp-qlt-8-ist);
+                  --qlt-lg-page-ist: var(--bp-qlt-9-ist);
+                }
+              </code>
+              <a href="#docs-space-toggle-expansion">Docs</a><br /><br />
             </section>
 
             <h5>What value to query against</h5>
